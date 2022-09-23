@@ -14,16 +14,16 @@ router.get('/', (req, res) => {
 
 
 // get all students
-// router.get('/', (req, res) => {
-//     Student.find({}, (err, students) => {
-//         if (err) {
-    //             console.log(err);
-    //         } else {
-        //             res.json(students);
-        //         }
-        //     });
-        // }
-        // );
+router.get('/students', (req, res) => {
+    Student.find({}, (err, students) => {
+        if (err) {
+               console.log(err);
+            } else {
+               res.json(students);
+           }
+      });
+   }
+);
         
 // get students of teacher
 router.get('/allocated-students/:username', (req, res) => {
