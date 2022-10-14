@@ -12,6 +12,28 @@ router.get('/', (req, res) => {
     res.send("This is admin route");
 });
 
+// get admin list
+router.get('/list', (req, res) => {
+    Admin.find({}, (err, admins) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.json(admins);
+        }
+    });
+});
+
+
+// // get admin info by id
+// router.get('/:id', (req, res) => {
+//     Admin.findById(req.params.id, (err, admin) => {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             res.json(admin);
+//         }
+//     });
+// });
 
 // register admin
 router.post('/register', (req, res) => {    
@@ -39,7 +61,8 @@ router.post('/login', (req, res) => {
         } else {
             if (admin) {
                 if (admin.password === req.body.password) {
-                    res.json(admin);
+                    // res.json(admin);
+                    res.status(200).json({ message: 'Admin logged in' });
                 } else {
                     res.json({ message: 'Invalid password' });
                 }
@@ -163,39 +186,39 @@ router.get('/teacher/:username', (req, res) => {
 
 
 // allocate student's _id to teacher 
-router.post('/allocate-students', (req, res) => {
+router.post('/allocate-student', (req, res) => {
     // take teacher's username and student's enrollment_no
     Teacher.findOne({ username: req.body.username }, (err, teacher) => {
         if (err) {
             console.log(err);
         } else {
             if (teacher) {
-    Student.findOne({enrollment_no:req.body.enrollment_no}, (err, student) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if (student) {
-                // add student's _id to teacher's students array
-                teacher.students.push(student._id);
-                teacher.save((err, teacher) => {
+                Student.findOne({enrollment_no:req.body.enrollment_no}, (err, student) => {
                     if (err) {
                         console.log(err);
                     } else {
-                        res.json(teacher);
+                        if (student) {
+                            // add student's _id to teacher's students array
+                            teacher.students.push(student._id);
+                            teacher.save((err, teacher) => {
+                                if (err) {
+                                    console.log(err);
+                                } else {
+                                    res.json(teacher);
+                                }
+                            });
+                            // set teacher's name as student's mentor
+                            student.mentor=teacher.name;
+                            student.save((err, student) => {
+                                if (err) {
+                                    console.log(err);
+                                }
+                            });
+                        } else {
+                            res.json({ message: 'Invalid enrollment number' });
+                        }
                     }
                 });
-                // set teacher's name as student's mentor
-                student.mentor=teacher.name;
-                student.save((err, student) => {
-                    if (err) {
-                        console.log(err);
-                    }
-                });
-            } else {
-                res.json({ message: 'Invalid enrollment number' });
-            }
-        }
-    });
             } else {
                 res.json({ message: 'Invalid username' });
             }

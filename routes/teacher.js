@@ -12,6 +12,27 @@ router.get('/', (req, res) => {
     res.send("This is teacher route");
 });
 
+// login route
+router.post('/login', (req, res) => {
+    const username = req.body.username;
+
+    Teacher.findOne({ username: username }, (err, teacher) => {
+        if (err) {
+            console.log(err);
+        } else {
+            if (teacher) {
+                if (teacher.password === req.body.password) {
+                    res.json(teacher);
+                } else {
+                    res.json({ message: 'Invalid password' });
+                }
+            } else {
+                res.json({ message: 'Invalid username' });
+            }
+        }
+    });
+}
+);
 
 // get all students
 router.get('/students', (req, res) => {

@@ -51,14 +51,24 @@ router.post('/update/:id', (req, res) => {
         if (!student) {
             res.status(404).send('data is not found');
         } else {
-            student.mobile_no = req.body.mobile;
-            student.email = req.body.email;
-            student.save().then(student => {
-                res.json('Student updated');
-            })
+            if(req.body.mobile_no){
+                student.mobile_no = req.body.mobile_no;
+                student.save().then(student => {
+                    res.json('Student Mobile Number Updated');
+                })
                 .catch(err => {
                     res.status(400).send('Update not possible');
                 });
+            }
+            if(req.body.email){
+                student.email = req.body.email;
+                student.save().then(student => {
+                    res.json('Student Email Updated');
+                })
+                .catch(err => {
+                    res.status(400).send('Update not possible');
+                });
+            }
         }
     });
 }
