@@ -1,11 +1,15 @@
 // admin router
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 
 // import admin model
 const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
+
+// import middleware
+const auth = require('../middlewares/auth');
 
 // test route
 router.get('/', (req, res) => {
@@ -23,30 +27,24 @@ router.get('/list', (req, res) => {
     });
 });
 
-
-// // get admin info by id
-// router.get('/:id', (req, res) => {
-//     Admin.findById(req.params.id, (err, admin) => {
-//         if (err) {
-//             console.log(err);
-//         } else {
-//             res.json(admin);
-//         }
-//     });
-// });
-
 // register admin
 router.post('/register', (req, res) => {    
     const newAdmin = new Admin({
         username:req.body.username,
-        password : req.body.password
+        password : req.body.password,
     });
     newAdmin.save((err, admin) => {
         if (err) {
             console.log(err);
-        } else {
-            res.json(admin);
+            res.status(500).json({ message: 'Error registering admin' });
+            return;
         }
+
+        const token = jwt.sign({ id: admin._id }, 'secret', {
+            expiresIn: 18000 // expires in 5 hours
+        });
+
+        res.status(200).send({id: admin._id, username: admin.username, auth: true, token: token });
     });
 });
 
@@ -61,8 +59,9 @@ router.post('/login', (req, res) => {
         } else {
             if (admin) {
                 if (admin.password === req.body.password) {
-                    // res.json(admin);
-                    res.status(200).json({ message: 'Admin logged in' });
+                    console.log(admin);
+                    res.status(200).json({ message: 'Admin Logged In' });
+                    // auth.createToken(admin);
                 } else {
                     res.json({ message: 'Invalid password' });
                 }
@@ -74,6 +73,16 @@ router.post('/login', (req, res) => {
 }
 );
 
+// get information in admin dashboard
+router.get('/:id', (req, res) => {
+    Admin.findById(req.params.id, (err, admin) => {
+        if (err) {
+            console.log(err);
+        } else {
+            res.json(admin);
+        }
+    });
+});
 
 // get students list
 router.get('/students', (req, res) => {

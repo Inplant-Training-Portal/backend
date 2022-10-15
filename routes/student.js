@@ -4,6 +4,9 @@ const router = express.Router();
 // import student model
 const Student = require('../models/Student');
 
+// import middleware
+const auth = require('../middlewares/auth');
+
 // test route
 router.get('/', (req, res) => {
     res.send("This is student route");
@@ -33,7 +36,8 @@ router.post('/login', (req, res) => {
         } else {
             if (student) {
                 if (student.password === req.body.password) {
-                    res.json(student);
+                    res.status(200).json({ message: 'Student Logged In' });
+                    // auth.createToken(student);
                 } else {
                     res.json({ message: 'Invalid password' });
                 }
