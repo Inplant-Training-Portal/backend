@@ -51,8 +51,8 @@ router.get('/students', (req, res) => {
 );
         
 // get students of teacher
-router.get('/allocated-students/:username', (req, res) => {
-    Teacher.findOne({ username: req.params.username }, (err, teacher) => {
+router.get('/allocated-students/:id', (req, res) => {
+    Teacher.findOne({ username: req.params.id }, (err, teacher) => {
         if (err) {
             console.log(err);
         } else {
