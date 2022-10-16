@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 // import admin controller
-const adminController = require('../controllers/admin.controller');
+const adminController = require('../controllers/admin.controller.js');
 
 // test route
 router.get('/test', adminController.test);

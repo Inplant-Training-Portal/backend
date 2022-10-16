@@ -1,6 +1,6 @@
 // import the student model
-const Student = require('../models/student.model');
-const Teacher = require('../models/teacher.model');
+const Student = require('../models/Student.model');
+const Teacher = require('../models/Teacher.model');
 
 // import packages
 const bcrypt = require('bcrypt');
@@ -81,7 +81,7 @@ const getTeacherProfile = async (req, res) => {
 //     }
 // }
 
-export default {
+module.exports={
     login,
     getStudentProfile,
     getTeacherProfile

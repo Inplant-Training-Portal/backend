@@ -5,6 +5,10 @@ const router = express.Router();
 // import student controller
 const studentController = require('../controllers/student.controller');
 
+const temp = () => {
+    console.log('nothing')
+}
+
 // login student
 router.post('/login', studentController.login);
 
@@ -12,8 +16,10 @@ router.post('/login', studentController.login);
 router.get('/profile/:id', studentController.getStudentProfile);
 
 // get teacher profile
-router.get('/teacher-profile/:id', studentController.getTeacherProfile);
+router.get('/teacher/:id', studentController.getTeacherProfile);
 
+// update contact
+// router.put('/update/:id',studentController.updateContact)
 
 // export router
 module.exports = router;

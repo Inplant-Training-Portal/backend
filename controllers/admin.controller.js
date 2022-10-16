@@ -1,11 +1,10 @@
-// admin model
-const Admin = require('../models/admin.model');
-const Teacher = require('../models/teacher.model');
-const Student = require('../models/student.model');
-
-
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
+// admin model
+const Admin = require('../models/Admin.model');
+const Teacher = require('../models/Teacher.model');
+const Student = require('../models/Student.model');
 
 const secret = 'secretkey';
 
@@ -18,10 +17,10 @@ const test = (req, res) => {
 
 // register admin
 const registerAdmin = (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, username, password } = req.body;
     const admin = new Admin({
         name,
-        email,
+        username,
         password
     });
     admin.save()
@@ -436,7 +435,7 @@ const getAllocatedStudentsListByTeacherName = (req, res) => {
 //         });
 // }
 
-export default {
+module.exports={
     test,
     registerAdmin,
     loginAdmin,
