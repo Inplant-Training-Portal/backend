@@ -48,16 +48,16 @@ router.get('/teacher/list', adminController.getTeachersList);
 router.post('/allocate-student', adminController.allocateStudent);
 
 // get allocated students list
-router.get('/allocated-students', adminController.getAllocatedStudentsList);
+router.get('/allocated-student/list', adminController.getAllocatedStudentsList);
 
 // get unallocated students list
-router.get('/unallocated-students', adminController.getUnallocatedStudentsList);
+router.get('/unallocated-student/list', adminController.getUnallocatedStudentsList);
 
 // get allocated teachers list
-router.get('/allocated-teachers', adminController.getAllocatedTeachersList);
+router.get('/allocated-teacher/list', adminController.getAllocatedTeachersList);
 
 // get unallocated teachers list
-router.get('/unallocated-teachers', adminController.getUnallocatedTeachersList);
+router.get('/unallocated-teacher/list', adminController.getUnallocatedTeachersList);
 
 // get allocated students list by teacher name
 router.get('/allocated-teacher/:name', adminController.getAllocatedStudentsListByTeacherName);
