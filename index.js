@@ -25,9 +25,9 @@ connection.once('open', function() {
 );
 
 // import routes
+const adminRoutes = require('./routes/admin');
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
-const adminRoutes = require('./routes/admin');
 
 // use routes
 app.use('/student', studentRoutes);

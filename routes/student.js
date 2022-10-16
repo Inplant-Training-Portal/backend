@@ -3,20 +3,16 @@ const express = require('express');
 const router = express.Router();
 
 // import student controller
-import {
-    login,
-    getStudentProfile,
-    getTeacherProfile
-} from '../controllers/student.controller';
+const studentController = require('../controllers/student.controller');
 
 // login student
-router.post('/login', login);
+router.post('/login', studentController.login);
 
 // get student profile
-router.get('/profile/:id', getStudentProfile);
+router.get('/profile/:id', studentController.getStudentProfile);
 
 // get teacher profile
-router.get('/teacher-profile/:id', getTeacherProfile);
+router.get('/teacher-profile/:id', studentController.getTeacherProfile);
 
 
 // export router
