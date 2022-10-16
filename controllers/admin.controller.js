@@ -14,6 +14,8 @@ const test = (req, res) => {
     res.send('working...');
 }
 
+// Admin Functions
+
 // register admin
 const registerAdmin = (req, res) => {
     const { name, email, password } = req.body;
@@ -79,21 +81,6 @@ const loginAdmin = (req, res) => {
         });
 }
 
-// get all admins
-const getAllAdmins = (req, res) => {
-    Admin.find()
-        .then(function (admins) {
-            res.status(200).json({
-                admins
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
-
 // get admin by id
 const getAdminById = (req, res) => {
     const id = req.params.id;
@@ -112,13 +99,68 @@ const getAdminById = (req, res) => {
         );
 }
 
-// delete admin
-const deleteAdmin = (req, res) => {
+// get all admins
+const getAllAdmins = (req, res) => {
+    Admin.find()
+        .then(function (admins) {
+            res.status(200).json({
+                admins
+            });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
+// Student Functions
+
+// add student
+const addStudent = (req, res) => {
+    const { name, enrollment_no, password } = req.body;
+    const student = new Student({
+        name,
+        enrollment_no,
+        password
+    });
+    student.save()
+        .then(function (result) {
+            res.status(201).json({
+                message: 'Student created successfully!',
+                result
+            });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
+// delete student
+const deleteStudent = (req, res) => {
     const id = req.params.id;
-    Admin.findByIdAndDelete(id)
+    Student.findByIdAndDelete(id)
         .then(function () {
             res.status(200).json({
-                message: 'Admin deleted successfully!'
+                message: 'Student deleted successfully!'
+            });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
+// get student's details
+const getStudentDetails = (req, res) => {
+    const id = req.params.id;
+    Student.findById(id)
+        .then(function (student) {
+            res.status(200).json({
+                student
             });
         })
         .catch(function (err) {
@@ -143,41 +185,7 @@ const getStudentsList = (req, res) => {
         });
 }
 
-// get teachers list
-const getTeachersList = (req, res) => {
-    Teacher.find()
-        .then(function (teachers) {
-            res.status(200).json({
-                teachers
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
-
-const addStudent = (req, res) => {
-    const { name, enrollment_no, password } = req.body;
-    const student = new Student({
-        name,
-        enrollment_no,
-        password
-    });
-    student.save()
-        .then(function (result) {
-            res.status(201).json({
-                message: 'Student created successfully!',
-                result
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
+// Teacher Functions
 
 const addTeacher = (req, res) => {
     const { name, username, password } = req.body;
@@ -200,21 +208,7 @@ const addTeacher = (req, res) => {
         });
 }
 
-const deleteStudent = (req, res) => {
-    const id = req.params.id;
-    Student.findByIdAndDelete(id)
-        .then(function () {
-            res.status(200).json({
-                message: 'Student deleted successfully!'
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
-
+// delete teacher
 const deleteTeacher = (req, res) => {
     const id = req.params.id;
     Teacher.findByIdAndDelete(id)
@@ -229,6 +223,39 @@ const deleteTeacher = (req, res) => {
             });
         });
 }
+
+// get teacher's details
+const getTeacherDetails = (req, res) => {
+    const id = req.params.id;
+    Teacher.findById(id)
+        .then(function (teacher) {
+            res.status(200).json({
+                teacher
+            });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
+// get teachers list
+const getTeachersList = (req, res) => {
+    Teacher.find()
+        .then(function (teachers) {
+            res.status(200).json({
+                teachers
+            });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
+// Allocate Functions
 
 // allocate student's id to teacher
 const allocateStudent = (req, res) => {
@@ -294,12 +321,12 @@ const getAllocatedStudentsList = (req, res) => {
         });
 }
 
-// get allowcated teachers list
-const getAllocatedTeachersList = (req, res) => {
-    Teacher.find({ students: { $ne: null } })
-        .then(function (teachers) {
+// get unallocated students list
+const getUnallocatedStudentsList = (req, res) => {
+    Student.find({ mentor: null })
+        .then(function (students) {
             res.status(200).json({
-                teachers
+                students
             });
         })
         .catch(function (err) {
@@ -309,12 +336,12 @@ const getAllocatedTeachersList = (req, res) => {
         });
 }
 
-// get unallocated students list
-const getUnallocatedStudentsList = (req, res) => {
-    Student.find({ mentor: null })
-        .then(function (students) {
+// get allowcated teachers list
+const getAllocatedTeachersList = (req, res) => {
+    Teacher.find({ students: { $ne: null } })
+        .then(function (teachers) {
             res.status(200).json({
-                students
+                teachers
             });
         })
         .catch(function (err) {
@@ -331,66 +358,6 @@ const getUnallocatedTeachersList = (req, res) => {
             res.status(200).json({
                 teachers
             });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
-
-// get student's details
-const getStudentDetails = (req, res) => {
-    const id = req.params.id;
-    Student.findById(id)
-        .then(function (student) {
-            res.status(200).json({
-                student
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
-
-// get teacher's details
-const getTeacherDetails = (req, res) => {
-    const id = req.params.id;
-    Teacher.findById(id)
-        .then(function (teacher) {
-            res.status(200).json({
-                teacher
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
-
-// update student's details
-const updateStudentDetails = (req, res) => {
-    const id = req.params.id;
-    const { email , mobile_no } = req.body;
-    Student.findById(id)
-        .then(function (student) {
-            student.email = email;
-            student.mobile_no = mobile_no;
-            student.save()
-                .then(function (result) {
-                    res.status(200).json({
-                        message: 'Student updated successfully!',
-                        result
-                    });
-                })
-                .catch(function (err) {
-                    res.status(500).json({
-                        error: err
-                    });
-                });
         })
         .catch(function (err) {
             res.status(500).json({
@@ -423,26 +390,70 @@ const getAllocatedStudentsListByTeacherName = (req, res) => {
         });
 }
 
+// Unused Functions
+
+// // update student's details
+// const updateStudentDetails = (req, res) => {
+//     const id = req.params.id;
+//     const { email , mobile_no } = req.body;
+//     Student.findById(id)
+//         .then(function (student) {
+//             student.email = email;
+//             student.mobile_no = mobile_no;
+//             student.save()
+//                 .then(function (result) {
+//                     res.status(200).json({
+//                         message: 'Student updated successfully!',
+//                         result
+//                     });
+//                 })
+//                 .catch(function (err) {
+//                     res.status(500).json({
+//                         error: err
+//                     });
+//                 });
+//         })
+//         .catch(function (err) {
+//             res.status(500).json({
+//                 error: err
+//             });
+//         });
+// }
+
+// // delete admin
+// const deleteAdmin = (req, res) => {
+//     const id = req.params.id;
+//     Admin.findByIdAndDelete(id)
+//         .then(function () {
+//             res.status(200).json({
+//                 message: 'Admin deleted successfully!'
+//             });
+//         })
+//         .catch(function (err) {
+//             res.status(500).json({
+//                 error: err
+//             });
+//         });
+// }
+
 export default {
     test,
     registerAdmin,
     loginAdmin,
-    getAllAdmins,
     getAdminById,
+    getAllAdmins,
     addStudent,
-    addTeacher,
-    deleteAdmin,
-    getStudentsList,
-    getTeachersList,
     deleteStudent,
+    getStudentDetails,
+    getStudentsList,
+    addTeacher,
     deleteTeacher,
+    getTeacherDetails,
+    getTeachersList,
     allocateStudent,
     getAllocatedStudentsList,
-    getAllocatedTeachersList,
     getUnallocatedStudentsList,
+    getAllocatedTeachersList,
     getUnallocatedTeachersList,
-    getStudentDetails,
-    getTeacherDetails,
-    updateStudentDetails,
     getAllocatedStudentsListByTeacherName
 }

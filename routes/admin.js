@@ -2,247 +2,85 @@
 const express = require('express');
 const router = express.Router();
 
-// import admin model
-const Admin = require('../models/Admin');
-const Teacher = require('../models/Teacher');
-const Student = require('../models/Student');
+// import admin controller
+import {
+    test,
+    registerAdmin,
+    loginAdmin,
+    getAdminById,
+    getAllAdmins,
+    addStudent,
+    deleteStudent,
+    getStudentDetails,
+    getStudentsList,
+    addTeacher,
+    deleteTeacher,
+    getTeacherDetails,
+    getTeachersList,
+    allocateStudent,
+    getAllocatedStudentsList,
+    getUnallocatedStudentsList,
+    getAllocatedTeachersList,
+    getUnallocatedTeachersList,
+    getAllocatedStudentsListByTeacherName
+} from '../controllers/admin.controller';
 
 // test route
-router.get('/', (req, res) => {
-    res.send("This is admin route");
-});
-
-// get admin list
-router.get('/list', (req, res) => {
-    Admin.find({}, (err, admins) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(admins);
-        }
-    });
-});
-
-
-// // get admin info by id
-// router.get('/:id', (req, res) => {
-//     Admin.findById(req.params.id, (err, admin) => {
-//         if (err) {
-//             console.log(err);
-//         } else {
-//             res.json(admin);
-//         }
-//     });
-// });
+router.get('/test', test);
 
 // register admin
-router.post('/register', (req, res) => {    
-    const newAdmin = new Admin({
-        username:req.body.username,
-        password : req.body.password
-    });
-    newAdmin.save((err, admin) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(admin);
-        }
-    });
-});
-
+router.post('/register', registerAdmin);
 
 // login admin
-router.post('/login', (req, res) => {
-    const username = req.body.username;
+router.post('/login', loginAdmin);
 
-    Admin.findOne({ username: username }, (err, admin) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if (admin) {
-                if (admin.password === req.body.password) {
-                    // res.json(admin);
-                    res.status(200).json({ message: 'Admin logged in' });
-                } else {
-                    res.json({ message: 'Invalid password' });
-                }
-            } else {
-                res.json({ message: 'Invalid username' });
-            }
-        }
-    });
-}
-);
+// get admin by id
+router.get('/:id', getAdminById);
 
-
-// get students list
-router.get('/students', (req, res) => {
-    Student.find((err, students) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(students);
-        }
-    });
-}
-);
-
-// get teachers list
-router.get('/teachers', (req, res) => {
-    Teacher.find((err, teachers) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(teachers);
-        }
-    });
-}
-);
+// get all admins
+router.get('/list', getAllAdmins);
 
 // add student
-router.post('/add-student', (req, res) => {
-    const student = new Student({
-        name: req.body.name,
-        enrollment_no: req.body.enrollment_no,
-        password: req.body.password,
-    });
-    student.save((err, student) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(student);
-        }
-    }
-    );
-}
-);
-
-// add teacher
-router.post('/add-teacher', (req, res) => {
-    const teacher = new Teacher({
-        name: req.body.name,
-        username: req.body.username,
-        password: req.body.password,
-    });
-    teacher.save((err, teacher) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(teacher);
-        }
-    }
-    );
-}
-);
+router.post('/add-student', addStudent);
 
 // delete student
-router.get('/delete-student/:id', (req, res) => {
-    Student.findByIdAndRemove({ _id: req.params.id }, (err, student) => {
-        if (err) {
-            res.json(err);
-        } else {
-            res.json('Successfully removed');
-        }
-    });
-}
-);
+router.post('/delete-student/:id', deleteStudent);
+
+// get student details
+router.get('/student/:id', getStudentDetails);
+
+// get students list
+router.get('/student/list', getStudentsList);
+
+// add teacher
+router.post('/add-teacher', addTeacher);
 
 // delete teacher
-router.get('/delete-teacher/:id', (req, res) => {
-    Teacher.findByIdAndRemove({ _id: req.params.id }, (err, teacher) => {
-        if (err) {
-            res.json(err);
-        } else {
-            res.json('Successfully removed');
-        }
-    });
-}
-);
+router.post('/delete-teacher/:id', deleteTeacher);
 
+// get teacher details
+router.get('/teacher/:id', getTeacherDetails);
 
-// get password of student
-router.get('/student/:enrollment_no', (req, res) => {
-    Student.findOne({ enrollment_no: req.params.enrollment_no }, (err, student) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(student);
-        }
-    });
-}
-);
+// get teachers list
+router.get('/teacher/list', getTeachersList);
 
-// get password of teacher
-router.get('/teacher/:username', (req, res) => {
-    Teacher.findOne({ username: req.params.username }, (err, teacher) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(teacher);
-        }
-    });
-}
-);
+// allocate student
+router.post('/allocate-student', allocateStudent);
 
+// get allocated students list
+router.get('/allocated-students', getAllocatedStudentsList);
 
-// allocate student's _id to teacher 
-router.post('/allocate-student', (req, res) => {
-    // take teacher's username and student's enrollment_no
-    Teacher.findOne({ username: req.body.username }, (err, teacher) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if (teacher) {
-                Student.findOne({enrollment_no:req.body.enrollment_no}, (err, student) => {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        if (student) {
-                            // add student's _id to teacher's students array
-                            teacher.students.push(student._id);
-                            teacher.save((err, teacher) => {
-                                if (err) {
-                                    console.log(err);
-                                } else {
-                                    res.json(teacher);
-                                }
-                            });
-                            // set teacher's name as student's mentor
-                            student.mentor=teacher.name;
-                            student.save((err, student) => {
-                                if (err) {
-                                    console.log(err);
-                                }
-                            });
-                        } else {
-                            res.json({ message: 'Invalid enrollment number' });
-                        }
-                    }
-                });
-            } else {
-                res.json({ message: 'Invalid username' });
-            }
-        }
-    });
-}
+// get unallocated students list
+router.get('/unallocated-students', getUnallocatedStudentsList);
 
-);
+// get allocated teachers list
+router.get('/allocated-teachers', getAllocatedTeachersList);
 
-// get students of teacher
-router.get('/teacher-students/:username', (req, res) => {
-    Teacher.findOne({ username: req.params.username }, (err, teacher) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if (teacher) {
-                res.json(teacher.students);
-            } else {
-                res.json({ message: 'Invalid username' });
-            }
-        }
-    });
-}
-);
+// get unallocated teachers list
+router.get('/unallocated-teachers', getUnallocatedTeachersList);
+
+// get allocated students list by teacher name
+router.get('/allocated-teacher/:name', getAllocatedStudentsListByTeacherName);
 
 
 // export admin router

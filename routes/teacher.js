@@ -2,77 +2,21 @@
 const express = require('express');
 const router = express.Router();
 
-// import teacher model
-const Teacher = require('../models/Teacher');
-const Student = require('../models/Student');
+// import teacher controller
+import {
+    login,
+    getTeacherProfile,
+    getStudentProfile
+} from '../controllers/teacher.controller';
 
-// test route
-router.get('/', (req, res) => {
-    res.send("This is teacher route");
-});
+// login teacher
+router.post('/login', login);
 
-// login route
-router.post('/login', (req, res) => {
-    const username = req.body.username;
+// get teacher profile
+router.get('/profile/:id', getTeacherProfile);
 
-    Teacher.findOne({ username: username }, (err, teacher) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if (teacher) {
-                if (teacher.password === req.body.password) {
-                    res.json(teacher);
-                } else {
-                    res.json({ message: 'Invalid password' });
-                }
-            } else {
-                res.json({ message: 'Invalid username' });
-            }
-        }
-    });
-}
-);
-
-// get all students
-router.get('/students', (req, res) => {
-    Student.find({}, (err, students) => {
-        if (err) {
-               console.log(err);
-            } else {
-               res.json(students);
-           }
-      });
-   }
-);
-        
-// get students of teacher
-router.get('/allocated-students/:username', (req, res) => {
-    Teacher.findOne({ username: req.params.username }, (err, teacher) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if (teacher) {
-                res.json(teacher.students);
-
-
-            } else {
-                res.json({ message: 'Invalid username' });
-            }
-        }
-    });
-});
-        
-// get student by id
-router.get('/:id', (req, res) => {
-    Student.findById(req.params.id, (err, student) => {
-        if (err) {
-            console.log(err);
-        } else {
-            res.json(student);
-        }
-    });
-}
-);
+// get student profile
+router.get('/student-profile/:id', getStudentProfile);
 
 
 // export router
