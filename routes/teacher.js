@@ -1,4 +1,3 @@
-
 // import express
 const express = require('express');
 const router = express.Router();
@@ -6,9 +5,6 @@ const router = express.Router();
 // import teacher model
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
-
-// import middleware
-const auth = require('../middlewares/auth');
 
 // test route
 router.get('/', (req, res) => {
@@ -25,8 +21,7 @@ router.post('/login', (req, res) => {
         } else {
             if (teacher) {
                 if (teacher.password === req.body.password) {
-                    res.status(200).json({ message: 'Teacher Logged In' });
-                    // auth.createToken(teacher);
+                    res.json(teacher);
                 } else {
                     res.json({ message: 'Invalid password' });
                 }
@@ -51,8 +46,8 @@ router.get('/students', (req, res) => {
 );
         
 // get students of teacher
-router.get('/allocated-students/:id', (req, res) => {
-    Teacher.findOne({ username: req.params.id }, (err, teacher) => {
+router.get('/allocated-students/:username', (req, res) => {
+    Teacher.findOne({ username: req.params.username }, (err, teacher) => {
         if (err) {
             console.log(err);
         } else {

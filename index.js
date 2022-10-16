@@ -16,7 +16,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // connect to mongodb
-mongoose.connect("mongodb+srv://test:test@inplant-training.ohnrlch.mongodb.net/?retryWrites=true&w=majority", { useNewUrlParser: true });
+mongoose.connect("mongodb+srv://sample:sample@inplant-training.ohnrlch.mongodb.net/?retryWrites=true&w=majority", { useNewUrlParser: true });
 const connection = mongoose.connection;
 
 connection.once('open', function() {

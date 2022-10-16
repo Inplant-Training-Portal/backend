@@ -1,16 +1,11 @@
 // admin router
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 
 // import admin model
 const Admin = require('../models/Admin');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
-
-// import middleware
-const auth = require('../middlewares/auth');
-const verifyToken = require('../middlewares/verifyToken');
 
 // test route
 router.get('/', (req, res) => {
@@ -28,75 +23,25 @@ router.get('/list', (req, res) => {
     });
 });
 
+
+// // get admin info by id
+// router.get('/:id', (req, res) => {
+//     Admin.findById(req.params.id, (err, admin) => {
+//         if (err) {
+//             console.log(err);
+//         } else {
+//             res.json(admin);
+//         }
+//     });
+// });
+
 // register admin
 router.post('/register', (req, res) => {    
     const newAdmin = new Admin({
         username:req.body.username,
-        password : req.body.password,
+        password : req.body.password
     });
     newAdmin.save((err, admin) => {
-        if (err) {
-            console.log(err);
-            res.status(500).json({ message: 'Error registering admin' });
-            return;
-        }
-
-        const token = jwt.sign({ id: admin._id }, 'secret', {
-            expiresIn: 18000 // expires in 5 hours
-        });
-
-        res.status(200).send({id: admin._id, username: admin.username, auth: true, token: token });
-    });
-});
-
-
-// login admin
-router.post('/login', (req, res) => {
-
-    // check for auth token
-    const token = req.headers['auth-token'];
-    if (token) {
-        jwt.verify(token, 'secret', function (err, decoded) {
-            if (err) {
-                return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
-            }
-            // if everything is good, save to request for use in other routes
-
-            req.userId = decoded.id;
-            res.status(200).send({ auth: true,id:decoded.id, message: 'Authenticated' });
-
-        });
-    } else {
-
-    const username = req.body.username;
-
-    Admin.findOne({ username: username }, (err, admin) => {
-        if (err) {
-            console.log(err);
-        } else {
-            if (admin) {
-                if (admin.password === req.body.password) {
-                    console.log(admin);
-                    // create token and send to client
-                    const token = jwt.sign({ id: admin._id }, 'secret', {
-                        expiresIn: 18000 // expires in 5 hours
-                    });
-                    res.status(200).send({ auth: true,id:admin.id, token: token });
-                    // res.header('auth-token', token).send(token);
-                } else {
-                    res.json({ message: 'Invalid password' });
-                }
-            } else {
-                res.json({ message: 'Invalid username' });
-            }
-        }
-    });
-    }}
-);
-
-// get information in admin dashboard
-router.get('/:id', (req, res) => {
-    Admin.findById(req.params._id, (err, admin) => {
         if (err) {
             console.log(err);
         } else {
@@ -105,17 +50,42 @@ router.get('/:id', (req, res) => {
     });
 });
 
+
+// login admin
+router.post('/login', (req, res) => {
+    const username = req.body.username;
+
+    Admin.findOne({ username: username }, (err, admin) => {
+        if (err) {
+            console.log(err);
+        } else {
+            if (admin) {
+                if (admin.password === req.body.password) {
+                    // res.json(admin);
+                    res.status(200).json({ message: 'Admin logged in' });
+                } else {
+                    res.json({ message: 'Invalid password' });
+                }
+            } else {
+                res.json({ message: 'Invalid username' });
+            }
+        }
+    });
+}
+);
+
+
 // get students list
 router.get('/students', (req, res) => {
-    Student.find({}, (err, students) => {
+    Student.find((err, students) => {
         if (err) {
             console.log(err);
         } else {
             res.json(students);
         }
     });
-});
-
+}
+);
 
 // get teachers list
 router.get('/teachers', (req, res) => {
