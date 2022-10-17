@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -9,7 +10,8 @@ const StudentSchema = new Schema({
     },
     enrollment_no: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -19,10 +21,12 @@ const StudentSchema = new Schema({
         type: String
     },
     email: {
-        type: String
+        type: String,
+        unique: true
     },
     mobile_no: {
-        type: String
+        type: String,
+        unique: true
     }
 });
 

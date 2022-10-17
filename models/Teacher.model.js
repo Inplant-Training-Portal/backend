@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -9,7 +10,8 @@ const TeacherSchema = new Schema({
     },
     username: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     password: {
         type: String,
@@ -22,3 +24,4 @@ const TeacherSchema = new Schema({
 
 // export teacher model
 module.exports = mongoose.model('Teacher', TeacherSchema);
+

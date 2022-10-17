@@ -18,66 +18,80 @@ const test = (req, res) => {
 // register admin
 const registerAdmin = (req, res) => {
     const { name, username, password } = req.body;
-    const admin = new Admin({
-        name,
-        username,
-        password
-    });
-    admin.save()
-        .then(function (result) {
-            res.status(201).json({
-                message: 'Admin created successfully!',
-                result
-            });
+
+    // check if admin already exists
+    Admin.findOne({ username: username })
+        .then(function (adminData) {
+            if (adminData) {
+                res.status(400).json({ message: 'Admin already exists' });
+            } else {
+
+
+                // encrypt password
+                bcrypt.hash(password, 10, function (err, hash) {
+                    if (err) {
+                        res.json({
+                            error: err
+                        })
+                    }
+                    const admin = new Admin({
+                        name,
+                        username,
+                        password: hash
+                    });
+                    admin.save()
+                        .then(function (result) {
+                            res.status(201).json({
+                                message: 'Admin created successfully!',
+                                result
+                            });
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({
+                                error: err
+                            });
+                        });
+                });
+            }
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
 }
 
 // login admin
 const loginAdmin = (req, res) => {
     const { username, password } = req.body;
-    Admin.findOne({ username: username })
-        .then(function (admin) {
-            if (admin) {
-                bcrypt.compare(password, admin.password, function (err, result) {
-                    if (err) {
-                        return res.status(401).json({
-                            failed: 'Unauthorized Access'
-                        });
-                    }
-                    if (result) {
-                        const JWTToken = jwt.sign({
-                            _id: admin._id
-                        },
-                            secret, {
-                            expiresIn: '2h'
-                        }
-                        );
-                        // set token in cookie
-                        return res.status(200).json({
-                            success: 'JWT Auth',
-                            token: JWTToken
-                        }).cookie('token', JWTToken, { expire: new Date() + 9999 });;
-                    }
-                    return res.status(401).json({
-                        failed: 'Unauthorized Access'
-                    });
-                });
-            } else {
-                return res.status(401).json({
-                    failed: 'Unauthorized Access'
-                });
-            }
-        })
-        .catch(function (error) {
+    Admin.findOne({ username }, function (err, admin) {
+        if (err) {
             res.status(500).json({
-                error: error
+                error: err
             });
-        });
+        }
+        if (admin) {
+            // compare password
+            bcrypt.compare(password, admin.password, function (err, result) {
+                if (err) {
+                    res.status(401).json({
+                        message: 'Login failed! Please try again.'
+                    });
+                }
+                if (result) {
+                    // generate token
+                    let token = jwt.sign({ name: admin.name }, secret, { expiresIn: '1h' });
+                    res.status(200).json({
+                        message: 'Login successful!',
+                        token
+                    });
+                } else {
+                    res.status(401).json({
+                        message: 'Password does not match!'
+                    });
+                }
+            });
+        } else {
+            res.status(401).json({
+                message: 'Oops, Admin not found!'
+            });
+        }
+    });
 }
 
 // get admin by id
@@ -100,17 +114,18 @@ const getAdminById = (req, res) => {
 
 // get all admins
 const getAllAdmins = (req, res) => {
-    Admin.find()
-        .then(function (admins) {
-            res.status(200).json({
-                admins
-            });
-        })
-        .catch(function (err) {
+    // list all admins
+    Admin.find({}, function (err, admins) {
+        if (err) {
             res.status(500).json({
+                message: 'Oops, something went wrong!',
                 error: err
             });
+        }
+        res.status(200).json({
+            admins
         });
+    });
 }
 
 // Student Functions
@@ -141,16 +156,24 @@ const addStudent = (req, res) => {
 const deleteStudent = (req, res) => {
     const id = req.params.id;
     Student.findByIdAndDelete(id)
-        .then(function () {
+        // check if student exists
+        .then(function (student) {
+            if (!student) {
+                res.status(404).json({
+                    message: 'Student not found!'
+                });
+            }
             res.status(200).json({
                 message: 'Student deleted successfully!'
             });
-        })
+        }
+        )
         .catch(function (err) {
             res.status(500).json({
                 error: err
             });
-        });
+        }
+        );
 }
 
 // get student's details
@@ -171,17 +194,18 @@ const getStudentDetails = (req, res) => {
 
 // get students list
 const getStudentsList = (req, res) => {
-    Student.find()
-        .then(function (students) {
-            res.status(200).json({
-                students
-            });
-        })
-        .catch(function (err) {
+    Student.find({}, function (err, students) {
+        if (err) {
             res.status(500).json({
+                message: 'Oops, something went wrong!',
                 error: err
             });
+        }
+        res.status(200).json({
+            students
         });
+    }
+    );
 }
 
 // Teacher Functions
@@ -211,16 +235,23 @@ const addTeacher = (req, res) => {
 const deleteTeacher = (req, res) => {
     const id = req.params.id;
     Teacher.findByIdAndDelete(id)
-        .then(function () {
+        .then(function (teacher) {
+            if (!teacher) {
+                res.status(404).json({
+                    message: 'Teacher not found!'
+                });
+            }
             res.status(200).json({
                 message: 'Teacher deleted successfully!'
             });
-        })
+        }
+        )
         .catch(function (err) {
             res.status(500).json({
                 error: err
             });
-        });
+        }
+        );
 }
 
 // get teacher's details
@@ -435,7 +466,7 @@ const getAllocatedStudentsListByTeacherName = (req, res) => {
 //         });
 // }
 
-module.exports={
+module.exports = {
     test,
     registerAdmin,
     loginAdmin,
