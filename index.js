@@ -6,9 +6,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+const {google} = require('googleapis');
 
 const app = express();
 const port = 9000;
+const scopes = ['https://www.googleapis.com/auth/drive'];
+const authPath = require('./inplant-training-portal-fa5bda6a1aaf.json');
+const service = google.drive({scope: scopes, auth: authPath});
 
 // use cors middleware
 app.use(cors());
