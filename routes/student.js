@@ -18,6 +18,11 @@ router.get('/profile/:id', studentController.getStudentProfile);
 // get teacher profile
 router.get('/teacher/:id', studentController.getTeacherProfile);
 
+// upload and dowbload files
+router.post('/file/upload', studentController.uploadFile);
+router.get('/file/view/:id', studentController.viewFile);
+router.get('/file/download/:id', studentController.downloadFile);
+
 // update contact
 // router.put('/update/:id',studentController.updateContact)
 

@@ -81,8 +81,59 @@ const getTeacherProfile = async (req, res) => {
 //     }
 // }
 
+// upload file
+const uploadFile = async (req, res) => {
+    try {
+        const { file } = req;
+        const { title, description } = req.body;
+        const student = await Student.findById(req.student
+            .id);
+        const newFile = {
+            title,
+            description,
+            fileLink: file.path,
+            size: file.size,
+            key: file.filename,
+            owner: student._id,
+        };
+        student.files.push(newFile);
+        await student.save();
+        res.status(200).json(student);
+    } catch (err) {
+        res.status(500).json({ message: 'Error in saving file' });
+    }
+}
+
+// view file
+const viewFile = async (req, res) => {
+    try {
+        const student = await Student.findById(req.student
+            .id);
+        const file = student.files.id(req.params.id);
+        res.json(file);
+    } catch (err) {
+        res.status(500).json({ message: 'Error in fetching file' });
+    }
+}
+
+// download file
+const downloadFile = async (req, res) => {
+    try {
+        const student = await Student.findById(req.student
+            .id);
+        const file = student.files.id(req.params.id);
+        res.download(file.fileLink);
+    } catch (err) {
+        res.status(500).json({ message: 'Error in downloading file' });
+    }
+}
+
+
 module.exports={
     login,
     getStudentProfile,
-    getTeacherProfile
+    getTeacherProfile,
+    uploadFile,
+    viewFile,
+    downloadFile
 }

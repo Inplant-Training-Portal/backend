@@ -19,6 +19,14 @@ const TeacherSchema = new Schema({
     },
     students: {
         type: Array
+    },
+    email: {
+        type: String,
+        unique: true
+    },
+    mobile_no: {
+        type: String,
+        unique: true
     }
 });
 

@@ -69,6 +69,26 @@ const getTeacherProfile = async (req, res) => {
     }
 }
 
+// view file
+const viewFile = async (req, res) => {
+    try {
+        const file = await File.findById(req.params.id);
+        res.json(file);
+    } catch (e) {
+        res.send({ message: 'Error in Fetching file' });
+    }
+}
+
+// download file
+const downloadFile = async (req, res) => {
+    try {
+        const file = await File.findById(req.params.id);
+        res.download(file.path);
+    } catch (e) {
+        res.send({ message: 'Error in Fetching file' });
+    }
+}
+
 module.exports={
     login,
     getStudentProfile,

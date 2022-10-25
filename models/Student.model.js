@@ -27,7 +27,15 @@ const StudentSchema = new Schema({
     mobile_no: {
         type: String,
         unique: true
+    },
+    documents: {
+        type: Array
+    },
+    date: {
+        type: Date,
+        default: Date.now
     }
+
 });
 
 // export student model

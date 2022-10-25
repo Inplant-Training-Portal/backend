@@ -28,11 +28,13 @@ connection.once('open', function() {
 const adminRoutes = require('./routes/admin');
 const studentRoutes = require('./routes/student');
 const teacherRoutes = require('./routes/teacher');
+const orgRoutes = require('./routes/org');
 
 // use routes
 app.use('/student', studentRoutes);
 app.use('/teacher', teacherRoutes);
 app.use('/admin', adminRoutes);
+app.use('/org', orgRoutes);
 
 // test route
 app.get('/', (req, res) => {
