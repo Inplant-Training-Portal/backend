@@ -92,5 +92,7 @@ const downloadFile = async (req, res) => {
 module.exports={
     login,
     getStudentProfile,
-    getTeacherProfile
+    getTeacherProfile,
+    viewFile,
+    downloadFile
 }
