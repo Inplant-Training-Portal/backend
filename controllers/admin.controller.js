@@ -6,6 +6,9 @@ const Admin = require('../models/Admin.model');
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
 
+// import middleware
+const auth = require('../middlewares/admin');
+
 const secret = 'secretkey';
 
 // test route
@@ -57,7 +60,7 @@ const registerAdmin = (req, res) => {
 }
 
 // login admin
-const loginAdmin = (req, res) => {
+const loginAdmin = (req, res, auth) => {
     const { username, password } = req.body;
     Admin.findOne({ username }, function (err, admin) {
         if (err) {
@@ -75,10 +78,11 @@ const loginAdmin = (req, res) => {
                 }
                 if (result) {
                     // generate token
-                    let token = jwt.sign({ name: admin.name }, secret, { expiresIn: '1h' });
+                    let token = jwt.sign({ username: admin._id }, secret, { expiresIn: '1h' });
                     res.status(200).json({
                         message: 'Login successful!',
-                        token
+                        token,
+                        userid: admin._id
                     });
                 } else {
                     res.status(401).json({
@@ -131,25 +135,35 @@ const getAllAdmins = (req, res) => {
 // Student Functions
 
 // add student
-const addStudent = (req, res) => {
+const addStudent = ( req, res) => {
     const { name, enrollment_no, password } = req.body;
-    const student = new Student({
-        name,
-        enrollment_no,
-        password
-    });
-    student.save()
-        .then(function (result) {
-            res.status(201).json({
-                message: 'Student created successfully!',
-                result
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
+    // hash password using bcrypt
+    bcrypt.hash(password, 10, function (err, hash) {
+        if (err) {
+            res.json({
                 error: err
+            })
+        }
+        else {
+            const student = new Student({
+                name,
+                enrollment_no,
+                password: hash
             });
-        });
+            student.save()
+                .then(function (result) {
+                    res.status(201).json({
+                        message: 'Student created successfully!',
+                        result
+                    });
+                })
+                .catch(function (err) {
+                    res.status(500).json({
+                        error: err
+                    });
+                });
+        }
+    });
 }
 
 // delete student

@@ -41,6 +41,7 @@ app.use('/teacher', teacherRoutes);
 app.use('/admin', adminRoutes);
 // app.use('/org', orgRoutes);
 
+
 // test route
 app.get('/', (req, res) => {
     res.send("testing");
