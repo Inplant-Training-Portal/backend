@@ -6,13 +6,16 @@ const router = express.Router();
 const teacherController = require('../controllers/teacher.controller');
 
 // login teacher
-router.post('/login', teacherController.login);
+router.post('/login', teacherController.loginTeacher);
 
 // get teacher profile
 router.get('/profile/:id', teacherController.getTeacherProfile);
 
 // get student profile
 router.get('/student-profile/:id', teacherController.getStudentProfile);
+
+// update teacher profile
+router.put('/profile/:id', teacherController.updateTeacherProfile);
 
 // view files
 router.get('/file/view/:id', teacherController.viewFile);

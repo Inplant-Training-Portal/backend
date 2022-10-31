@@ -20,7 +20,7 @@ const test = (req, res) => {
 
 // register admin
 const registerAdmin = (req, res) => {
-    const { name, username, password } = req.body;
+    const { name, username, password, email, mobile_no } = req.body;
 
     // check if admin already exists
     Admin.findOne({ username: username })
@@ -28,8 +28,6 @@ const registerAdmin = (req, res) => {
             if (adminData) {
                 res.status(400).json({ message: 'Admin already exists' });
             } else {
-
-
                 // encrypt password
                 bcrypt.hash(password, 10, function (err, hash) {
                     if (err) {
@@ -40,7 +38,9 @@ const registerAdmin = (req, res) => {
                     const admin = new Admin({
                         name,
                         username,
-                        password: hash
+                        password: hash,
+                        email,
+                        mobile_no
                     });
                     admin.save()
                         .then(function (result) {
@@ -60,7 +60,7 @@ const registerAdmin = (req, res) => {
 }
 
 // login admin
-const loginAdmin = (req, res, auth) => {
+const loginAdmin = (req, res) => {
     const { username, password } = req.body;
     Admin.findOne({ username }, function (err, admin) {
         if (err) {
@@ -82,9 +82,10 @@ const loginAdmin = (req, res, auth) => {
                     res.status(200).json({
                         message: 'Login successful!',
                         token,
-                        userid: admin._id
+                        user: admin
                     });
-                } else {
+                } 
+                else {
                     res.status(401).json({
                         message: 'Password does not match!'
                     });
@@ -135,35 +136,42 @@ const getAllAdmins = (req, res) => {
 // Student Functions
 
 // add student
-const addStudent = ( req, res) => {
+const addStudent = (req, res) => {
     const { name, enrollment_no, password } = req.body;
-    // hash password using bcrypt
-    bcrypt.hash(password, 10, function (err, hash) {
-        if (err) {
-            res.json({
-                error: err
-            })
-        }
-        else {
-            const student = new Student({
-                name,
-                enrollment_no,
-                password: hash
-            });
-            student.save()
-                .then(function (result) {
-                    res.status(201).json({
-                        message: 'Student created successfully!',
-                        result
+
+    // check if student already exists
+    Student.findOne({ enrollment_no: enrollment_no })
+        .then(function (studentData) {
+            if (studentData) {
+                res.status(400).json({ message: 'Student already exists' });
+            } else {
+                // encrypt password
+                bcrypt.hash(password, 10, function (err, hash) {
+                    if (err) {
+                        res.json({
+                            error: err
+                        })
+                    }
+                    const student = new Student({
+                        name,
+                        enrollment_no,
+                        password: hash
                     });
-                })
-                .catch(function (err) {
-                    res.status(500).json({
-                        error: err
-                    });
+                    student.save()
+                        .then(function (result) {
+                            res.status(201).json({
+                                message: 'Student created successfully!',
+                                result
+                            });
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({
+                                error: err
+                            });
+                        });
                 });
-        }
-    });
+            }
+        })
 }
 
 // delete student
@@ -223,27 +231,44 @@ const getStudentsList = (req, res) => {
 }
 
 // Teacher Functions
-
 const addTeacher = (req, res) => {
     const { name, username, password } = req.body;
-    const teacher = new Teacher({
-        name,
-        username,
-        password
-    });
-    teacher.save()
-        .then(function (result) {
-            res.status(201).json({
-                message: 'Teacher created successfully!',
-                result
-            });
+
+    // check if admin already exists
+    Teacher.findOne({ username: username })
+        .then(function (teacherData) {
+            if (teacherData) {
+                res.status(400).json({ message: 'Teacher already exists' });
+            } else {
+                // encrypt password
+                bcrypt.hash(password, 10, function (err, hash) {
+                    if (err) {
+                        res.json({
+                            error: err
+                        })
+                    }
+                    const teacher = new Teacher({
+                        name,
+                        username,
+                        password: hash
+                    });
+                    teacher.save()
+                        .then(function (result) {
+                            res.status(201).json({
+                                message: 'Teacher created successfully!',
+                                result
+                            });
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({
+                                error: err
+                            });
+                        });
+                });
+            }
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
 }
+
 
 // delete teacher
 const deleteTeacher = (req, res) => {

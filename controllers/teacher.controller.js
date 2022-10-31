@@ -6,38 +6,46 @@ const Teacher = require('../models/Teacher.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-// login
-const login = async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const teacher = await Teacher.findOne({ username:username });
-        if (!teacher) {
-            return res.status(404).json({ message: 'Student not found' });
+const secret = "secretkey"
+
+// login teacher
+const loginTeacher = (req, res) => {
+    const { username, password } = req.body;
+    Teacher.findOne({ username }, function (err, teacher) {
+        if (err) {
+            res.status(500).json({
+                error: err
+            });
         }
-        const isMatch = await bcrypt.compare(password, teacher.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        if (teacher) {
+            // compare password
+            bcrypt.compare(password, teacher.password, function (err, result) {
+                if (err) {
+                    res.status(401).json({
+                        message: 'Login failed! Please try again.'
+                    });
+                }
+                if (result) {
+                    // generate token
+                    let token = jwt.sign({ username: teacher._id }, secret, { expiresIn: '1h' });
+                    res.status(200).json({
+                        message: 'Login successful!',
+                        token,
+                        user: teacher
+                    });
+                } 
+                else {
+                    res.status(401).json({
+                        message: 'Password does not match!'
+                    });
+                }
+            });
+        } else {
+            res.status(401).json({
+                message: 'Oops, Teacher not found!'
+            });
         }
-        const payload = {
-            teacher: {
-                id: teacher.id,
-            },
-        };
-        jwt.sign(
-            payload,
-            'randomString',
-            {
-                expiresIn: 10000,
-            },
-            (err, token) => {
-                if (err) throw err;
-                res.status(200).json({ token });
-            }
-        );
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).send('Error in Saving');
-    }
+    });
 }
 
 // student info
@@ -89,10 +97,29 @@ const downloadFile = async (req, res) => {
     }
 }
 
+const updateTeacherProfile = async (req, res) => {
+    try {
+        const teacher = await Teacher.findById(req.params.id);
+        if (teacher) {
+            teacher.email = req.body.email 
+            teacher.mobile_no = req.body.mobile_no
+
+            const updatedTeacher = await teacher.save();
+            res.json(updatedTeacher);
+        } else {
+            res.status(404).json({ message: 'Teacher not found' });
+        }
+    } catch (e) {
+        res.send({ message: 'Error in Updating teacher' });
+    }
+}
+
+
 module.exports={
-    login,
+    loginTeacher,
     getStudentProfile,
     getTeacherProfile,
     viewFile,
-    downloadFile
+    downloadFile,
+    updateTeacherProfile
 }

@@ -6,38 +6,46 @@ const Teacher = require('../models/Teacher.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const secret = "secretkey"
+
 // login
-const login = async (req, res) => {
-    try {
-        const { enrollment_no, password } = req.body;
-        const student = await Student.findOne({ enrollment_no: enrollment_no });
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
+const loginStudent = (req, res) => {
+    const { username, password } = req.body;
+    Student.findOne({ username }, function (err, student) {
+        if (err) {
+            res.status(500).json({
+                error: err
+            });
         }
-        const isMatch = await bcrypt.compare(password, student.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        if (student) {
+            // compare password
+            bcrypt.compare(password, student.password, function (err, result) {
+                if (err) {
+                    res.status(401).json({
+                        message: 'Login failed! Please try again.'
+                    });
+                }
+                if (result) {
+                    // generate token
+                    let token = jwt.sign({ username: student._id }, secret, { expiresIn: '1h' });
+                    res.status(200).json({
+                        message: 'Login successful!',
+                        token,
+                        user: student
+                    });
+                } 
+                else {
+                    res.status(401).json({
+                        message: 'Password does not match!'
+                    });
+                }
+            });
+        } else {
+            res.status(401).json({
+                message: 'Oops, Student not found!'
+            });
         }
-        const payload = {
-            student: {
-                id: student.id,
-            },
-        };
-        jwt.sign(
-            payload,
-            'randomString',
-            {
-                expiresIn: 10000,
-            },
-            (err, token) => {
-                if (err) throw err;
-                res.status(200).json({ token });
-            }
-        );
-    } catch (err) {
-        console.log(err.message);
-        res.status(500).send('Error in Saving');
-    }
+    });
 }
 
 // get student profile
@@ -130,7 +138,7 @@ const downloadFile = async (req, res) => {
 
 
 module.exports={
-    login,
+    loginStudent,
     getStudentProfile,
     getTeacherProfile,
     uploadFile,

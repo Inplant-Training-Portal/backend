@@ -10,7 +10,7 @@ const temp = () => {
 }
 
 // login student
-router.post('/login', studentController.login);
+router.post('/login', studentController.loginStudent);
 
 // get student profile
 router.get('/profile/:id', studentController.getStudentProfile);
