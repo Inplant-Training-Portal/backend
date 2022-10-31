@@ -12,8 +12,11 @@ const temp = () => {
 // login student
 router.post('/login', studentController.loginStudent);
 
+// update student profile
+router.post('/update/info/:id', studentController.updateStudentInfo);
+
 // get student profile
-router.get('/profile/:id', studentController.getStudentProfile);
+// router.get('/profile/:id', studentController.getStudentProfile);
 
 // get teacher profile
 router.get('/teacher/:id', studentController.getTeacherProfile);

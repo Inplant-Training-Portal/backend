@@ -48,6 +48,75 @@ const loginTeacher = (req, res) => {
     });
 }
 
+// update teacher info
+const updateTeacherInfo = (req, res) => {
+    const id = req.params.id;
+
+    // update password
+    if(req.body.password){
+        bcrypt.hash(req.body.password, 10, function (err, hash) {
+            if (err) {
+                res.json({
+                    error: err
+                })
+            }
+            const newPassword = {
+                password: hash
+            };
+            Teacher.findByIdAndUpdate(id, { password: newPassword.password }, { new: true })
+                .then(function (result) {
+                    res.status(200).json({
+                        message: 'Password updated successfully!',
+                        result
+                    });
+                })
+                .catch(function (err) {
+                    res.status(500).json({
+                        error: err
+                    });
+                });
+        });
+    }
+
+    //update email
+    if(req.body.email){
+        const newEmail = {
+            email: req.body.email
+        };
+        Teacher.findByIdAndUpdate(id, { email: newEmail.email }, { new: true })
+            .then(function (result) {
+                res.status(200).json({
+                    message: 'Email updated successfully!',
+                    result
+                });
+            })
+            .catch(function (err) {
+                res.status(500).json({
+                    error: err
+                });
+            });
+    }
+
+    // update mobile no
+    if(req.body.mobile_no){
+        const newMobileNo = {
+            mobile_no: req.body.mobile_no
+        };
+        Teacher.findByIdAndUpdate(id, { mobile_no: newMobileNo.mobile_no }, { new: true })
+            .then(function (result) {
+                res.status(200).json({
+                    message: 'Mobile Number updated successfully!',
+                    result
+                });
+            })
+            .catch(function (err) {
+                res.status(500).json({
+                    error: err
+                });
+            });
+    }
+}
+
 // student info
 const getStudentProfile = async (req, res) => {
     try {
@@ -117,6 +186,7 @@ const updateTeacherProfile = async (req, res) => {
 
 module.exports={
     loginTeacher,
+    updateTeacherInfo,
     getStudentProfile,
     getTeacherProfile,
     viewFile,

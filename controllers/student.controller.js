@@ -48,6 +48,75 @@ const loginStudent = (req, res) => {
     });
 }
 
+// update student info
+const updateStudentInfo = (req, res) => {
+    const id = req.params.id;
+
+    // update password
+    if(req.body.password){
+        bcrypt.hash(req.body.password, 10, function (err, hash) {
+            if (err) {
+                res.json({
+                    error: err
+                })
+            }
+            const newPassword = {
+                password: hash
+            };
+            Student.findByIdAndUpdate(id, { password: newPassword.password }, { new: true })
+                .then(function (result) {
+                    res.status(200).json({
+                        message: 'Password updated successfully!',
+                        result
+                    });
+                })
+                .catch(function (err) {
+                    res.status(500).json({
+                        error: err
+                    });
+                });
+        });
+    }
+
+    //update email
+    if(req.body.email){
+        const newEmail = {
+            email: req.body.email
+        };
+        Student.findByIdAndUpdate(id, { email: newEmail.email }, { new: true })
+            .then(function (result) {
+                res.status(200).json({
+                    message: 'Email updated successfully!',
+                    result
+                });
+            })
+            .catch(function (err) {
+                res.status(500).json({
+                    error: err
+                });
+            });
+    }
+
+    // update mobile no
+    if(req.body.mobile_no){
+        const newMobileNo = {
+            mobile_no: req.body.mobile_no
+        };
+        Student.findByIdAndUpdate(id, { mobile_no: newMobileNo.mobile_no }, { new: true })
+            .then(function (result) {
+                res.status(200).json({
+                    message: 'Mobile Number updated successfully!',
+                    result
+                });
+            })
+            .catch(function (err) {
+                res.status(500).json({
+                    error: err
+                });
+            });
+    }
+}
+
 // get student profile
 const getStudentProfile = async (req, res) => {
     try {
@@ -78,16 +147,6 @@ const getTeacherProfile = async (req, res) => {
         res.send({ message: 'Error in Fetching teacher' });
     }
 }
-
-// update email and mobile_no 
-// const updateContact = async(req,res)=>{
-//     try {
-//         const {email,mobile_no} =req.body
-        
-//     } catch (err) {
-//         res.send({message:`Error in updation: ${err}`})
-//     }
-// }
 
 // upload file
 const uploadFile = async (req, res) => {
@@ -139,6 +198,7 @@ const downloadFile = async (req, res) => {
 
 module.exports={
     loginStudent,
+    updateStudentInfo,
     getStudentProfile,
     getTeacherProfile,
     uploadFile,

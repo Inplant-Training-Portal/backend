@@ -6,9 +6,6 @@ const Admin = require('../models/Admin.model');
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
 
-// import middleware
-const auth = require('../middlewares/admin');
-
 const secret = 'secretkey';
 
 // test route
@@ -131,6 +128,74 @@ const getAllAdmins = (req, res) => {
             admins
         });
     });
+}
+
+const updateAdminInfo = (req, res) => {
+    const id = req.params.id;
+
+    // update password
+    if(req.body.password){
+        bcrypt.hash(req.body.password, 10, function (err, hash) {
+            if (err) {
+                res.json({
+                    error: err
+                })
+            }
+            const newPassword = {
+                password: hash
+            };
+            Admin.findByIdAndUpdate(id, { password: newPassword.password }, { new: true })
+                .then(function (result) {
+                    res.status(200).json({
+                        message: 'Password updated successfully!',
+                        result
+                    });
+                })
+                .catch(function (err) {
+                    res.status(500).json({
+                        error: err
+                    });
+                });
+        });
+    }
+
+    //update email
+    if(req.body.email){
+        const newEmail = {
+            email: req.body.email
+        };
+        Admin.findByIdAndUpdate(id, { email: newEmail.email }, { new: true })
+            .then(function (result) {
+                res.status(200).json({
+                    message: 'Email updated successfully!',
+                    result
+                });
+            })
+            .catch(function (err) {
+                res.status(500).json({
+                    error: err
+                });
+            });
+    }
+
+    // update mobile no
+    if(req.body.mobile_no){
+        const newMobileNo = {
+            mobile_no: req.body.mobile_no
+        };
+        Admin.findByIdAndUpdate(id, { mobile_no: newMobileNo.mobile_no }, { new: true })
+            .then(function (result) {
+                res.status(200).json({
+                    message: 'Mobile Number updated successfully!',
+                    result
+                });
+            })
+            .catch(function (err) {
+                res.status(500).json({
+                    error: err
+                });
+            });
+    }
 }
 
 // Student Functions
@@ -459,58 +524,13 @@ const getAllocatedStudentsListByTeacherName = (req, res) => {
         });
 }
 
-// Unused Functions
-
-// // update student's details
-// const updateStudentDetails = (req, res) => {
-//     const id = req.params.id;
-//     const { email , mobile_no } = req.body;
-//     Student.findById(id)
-//         .then(function (student) {
-//             student.email = email;
-//             student.mobile_no = mobile_no;
-//             student.save()
-//                 .then(function (result) {
-//                     res.status(200).json({
-//                         message: 'Student updated successfully!',
-//                         result
-//                     });
-//                 })
-//                 .catch(function (err) {
-//                     res.status(500).json({
-//                         error: err
-//                     });
-//                 });
-//         })
-//         .catch(function (err) {
-//             res.status(500).json({
-//                 error: err
-//             });
-//         });
-// }
-
-// // delete admin
-// const deleteAdmin = (req, res) => {
-//     const id = req.params.id;
-//     Admin.findByIdAndDelete(id)
-//         .then(function () {
-//             res.status(200).json({
-//                 message: 'Admin deleted successfully!'
-//             });
-//         })
-//         .catch(function (err) {
-//             res.status(500).json({
-//                 error: err
-//             });
-//         });
-// }
-
 module.exports = {
     test,
     registerAdmin,
     loginAdmin,
     getAdminById,
     getAllAdmins,
+    updateAdminInfo,
     addStudent,
     deleteStudent,
     getStudentDetails,
