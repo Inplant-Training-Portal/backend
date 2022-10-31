@@ -52,68 +52,96 @@ const loginTeacher = (req, res) => {
 const updateTeacherInfo = (req, res) => {
     const id = req.params.id;
 
-    // update password
-    if(req.body.password){
-        bcrypt.hash(req.body.password, 10, function (err, hash) {
-            if (err) {
-                res.json({
-                    error: err
-                })
-            }
-            const newPassword = {
-                password: hash
-            };
-            Teacher.findByIdAndUpdate(id, { password: newPassword.password }, { new: true })
-                .then(function (result) {
-                    res.status(200).json({
-                        message: 'Password updated successfully!',
-                        result
-                    });
-                })
-                .catch(function (err) {
-                    res.status(500).json({
-                        error: err
-                    });
-                });
-        });
-    }
+    let newInfo = {};
 
-    //update email
     if(req.body.email){
-        const newEmail = {
-            email: req.body.email
-        };
-        Teacher.findByIdAndUpdate(id, { email: newEmail.email }, { new: true })
-            .then(function (result) {
-                res.status(200).json({
-                    message: 'Email updated successfully!',
-                    result
-                });
-            })
-            .catch(function (err) {
-                res.status(500).json({
-                    error: err
-                });
-            });
+        newInfo.email = req.body.email;
+
     }
 
-    // update mobile no
-    if(req.body.mobile_no){
-        const newMobileNo = {
-            mobile_no: req.body.mobile_no
-        };
-        Teacher.findByIdAndUpdate(id, { mobile_no: newMobileNo.mobile_no }, { new: true })
-            .then(function (result) {
-                res.status(200).json({
-                    message: 'Mobile Number updated successfully!',
-                    result
-                });
-            })
+    if(req.body.mobile_no) {
+        newInfo.mobile_no = req.body.mobile_no;
+    }
+
+    Teacher.findByIdAndUpdate(id, newInfo, { new: true })
+        .then(function (result) {
+            res.status(200).json({
+                message: 'Info updated successfully!',
+                result
+            });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
+// change password
+const changeTeacherPassword = (req, res) => {
+    const id = req.params.id;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    // check if old password is correct
+    if(oldPassword) {
+        Teacher.findById(id)
+            .then(function (teacher) {
+                if (teacher) {
+                    // compare password
+                    bcrypt.compare(oldPassword, teacher.password, function (err, result) {
+                        if (err) {
+                            res.status(401).json({
+                                message: 'Login failed! Please try again.'
+                            });
+                        }
+                        if (result) {
+                            // check if new password and confirm password match
+                            if(newPassword === confirmPassword) {
+                                // encrypt password
+                                bcrypt.hash(newPassword, 10, function (err, hash) {
+                                    if (err) {
+                                        res.json({
+                                            error: err
+                                        })
+                                    }
+                                    Teacher.findByIdAndUpdate(id, { password: hash }, { new: true })
+                                        .then(function (result) {
+                                            res.status(200).json({
+                                                message: 'Password updated successfully!',
+                                                result
+                                            });
+                                        })
+                                        .catch(function (err) {
+                                            res.status(500).json({
+                                                error: err
+                                            });
+                                        });
+                                });
+                            } else {
+                                res.status(401).json({
+                                    message: 'New password and Confirm password do not match!'
+                                });
+                            }
+                        }
+                        else {
+                            res.status(401).json({
+                                message: 'Old password does not match!'
+                            });
+                        }
+                    });
+                } else {
+                    res.status(401).json({
+                        message: 'Oops, Teacher not found!'
+                    });
+                }
+            }
+            )
             .catch(function (err) {
                 res.status(500).json({
                     error: err
                 });
-            });
+            }
+            );
     }
 }
 
@@ -187,6 +215,7 @@ const updateTeacherProfile = async (req, res) => {
 module.exports={
     loginTeacher,
     updateTeacherInfo,
+    changeTeacherPassword,
     getStudentProfile,
     getTeacherProfile,
     viewFile,

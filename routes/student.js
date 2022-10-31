@@ -15,6 +15,9 @@ router.post('/login', studentController.loginStudent);
 // update student profile
 router.post('/update/info/:id', studentController.updateStudentInfo);
 
+// change password
+router.post('/update/password/:id', studentController.changeStudentPassword);
+
 // get student profile
 // router.get('/profile/:id', studentController.getStudentProfile);
 

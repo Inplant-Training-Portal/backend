@@ -17,6 +17,9 @@ router.post('/login', adminController.loginAdmin);
 // update admin info
 router.post('/update/info/:id', adminController.updateAdminInfo);
 
+// change password
+router.post('/update/password/:id', adminController.changeAdminPassword);
+
 // get admin by id
 // router.get('/info/:id', adminController.getAdminById);
 

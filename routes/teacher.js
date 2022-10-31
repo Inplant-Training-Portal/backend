@@ -11,6 +11,9 @@ router.post('/login', teacherController.loginTeacher);
 // update teacher profile
 router.post('/update/info/:id', teacherController.updateTeacherInfo);
 
+// change password
+router.post('/update/password/:id', teacherController.changeTeacherPassword);
+
 // get teacher profile
 // router.get('/profile/:id', teacherController.getTeacherProfile);
 
