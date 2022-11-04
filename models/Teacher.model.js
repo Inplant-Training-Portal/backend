@@ -21,12 +21,10 @@ const TeacherSchema = new Schema({
         type: Array
     },
     email: {
-        type: String,
-        unique: true
+        type: String
     },
     mobile_no: {
-        type: String,
-        unique: true
+        type: String
     }
 });
 

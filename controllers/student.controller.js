@@ -10,8 +10,8 @@ const secret = "secretkey"
 
 // login
 const loginStudent = (req, res) => {
-    const { username, password } = req.body;
-    Student.findOne({ username }, function (err, student) {
+    const { enrollment_no, password } = req.body;
+    Student.findOne({ enrollment_no }, function (err, student) {
         if (err) {
             res.status(500).json({
                 error: err

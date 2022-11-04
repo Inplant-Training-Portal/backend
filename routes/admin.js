@@ -30,7 +30,7 @@ router.get('/list', adminController.getAllAdmins);
 router.post('/add-student', adminController.addStudent);
 
 // delete student
-router.post('/delete-student/:id', adminController.deleteStudent);
+router.post('/delete-student', adminController.deleteStudent);
 
 // get student details
 router.get('/student-info/:id', adminController.getStudentDetails);
@@ -42,7 +42,7 @@ router.get('/students/list', adminController.getStudentsList);
 router.post('/add-teacher', adminController.addTeacher);
 
 // delete teacher
-router.post('/delete-teacher/:id', adminController.deleteTeacher);
+router.post('/delete-teacher', adminController.deleteTeacher);
 
 // get teacher details
 router.get('/teacher-info/:id', adminController.getTeacherDetails);

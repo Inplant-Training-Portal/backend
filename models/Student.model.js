@@ -22,11 +22,9 @@ const StudentSchema = new Schema({
     },
     email: {
         type: String,
-        unique: true
     },
     mobile_no: {
         type: String,
-        unique: true
     },
     documents: {
         type: Array

@@ -81,7 +81,7 @@ const loginAdmin = (req, res) => {
                         token,
                         user: admin
                     });
-                } 
+                }
                 else {
                     res.status(401).json({
                         message: 'Password does not match!'
@@ -135,12 +135,12 @@ const updateAdminInfo = (req, res) => {
 
     let newInfo = {};
 
-    if(req.body.email){
+    if (req.body.email) {
         newInfo.email = req.body.email;
 
     }
 
-    if(req.body.mobile_no) {
+    if (req.body.mobile_no) {
         newInfo.mobile_no = req.body.mobile_no;
     }
 
@@ -164,7 +164,7 @@ const changeAdminPassword = (req, res) => {
     const { oldPassword, newPassword, confirmPassword } = req.body;
 
     // check if old password is correct
-    if(oldPassword) {
+    if (oldPassword) {
         Admin.findById(id)
             .then(function (admin) {
                 if (admin) {
@@ -177,7 +177,7 @@ const changeAdminPassword = (req, res) => {
                         }
                         if (result) {
                             // check if new password and confirm password match
-                            if(newPassword === confirmPassword) {
+                            if (newPassword === confirmPassword) {
                                 // encrypt password
                                 bcrypt.hash(newPassword, 10, function (err, hash) {
                                     if (err) {
@@ -262,6 +262,7 @@ const addStudent = (req, res) => {
                             res.status(500).json({
                                 error: err
                             });
+                            console.log(err);
                         });
                 });
             }
@@ -270,26 +271,40 @@ const addStudent = (req, res) => {
 
 // delete student
 const deleteStudent = (req, res) => {
-    const id = req.params.id;
-    Student.findByIdAndDelete(id)
-        // check if student exists
-        .then(function (student) {
+
+    const { enrollment_no } = req.body;
+
+    Student.findOne({ enrollment_no: enrollment_no })
+        .then((student) => {
             if (!student) {
-                res.status(404).json({
-                    message: 'Student not found!'
-                });
+                res.status(404).json({message : 'Student not found'});
+            } else {
+                Student.findByIdAndDelete(student._id)
+                    // check if student exists
+                    .then(function (student) {
+                        if (!student) {
+                            res.status(404).json({
+                                message: 'Student not exist!'
+                            });
+                        }
+                        res.status(200).json({
+                            message: 'Student deleted successfully!'
+                        });
+                    }
+                    )
+                    .catch(function (err) {
+                        res.status(500).json({
+                            error: err
+                        });
+                    }
+                    );
             }
-            res.status(200).json({
-                message: 'Student deleted successfully!'
-            });
-        }
-        )
+        })
         .catch(function (err) {
             res.status(500).json({
                 error: err
             });
-        }
-        );
+        });
 }
 
 // get student's details
@@ -366,25 +381,41 @@ const addTeacher = (req, res) => {
 
 // delete teacher
 const deleteTeacher = (req, res) => {
-    const id = req.params.id;
-    Teacher.findByIdAndDelete(id)
-        .then(function (teacher) {
-            if (!teacher) {
-                res.status(404).json({
-                    message: 'Teacher not found!'
-                });
+
+    const { username } = req.body;
+
+    Teacher.findOne({ username: username })
+        .then((teacher) => {
+            // if (!teacher) {
+                // res.status(404).json('Teacher not found');
+            // } else {
+            if(teacher){
+                Teacher.findByIdAndDelete(teacher._id)
+                    // check if student exists
+                    .then(function (student) {
+                        if (!student) {
+                            res.status(404).json({
+                                message: 'Teacher not exist!'
+                            });
+                        }
+                        res.status(200).json({
+                            message: 'Teacher deleted successfully!'
+                        });
+                    }
+                    )
+                    .catch(function (err) {
+                        res.status(500).json({
+                            error: err
+                        });
+                    }
+                    );
             }
-            res.status(200).json({
-                message: 'Teacher deleted successfully!'
-            });
-        }
-        )
+        })
         .catch(function (err) {
             res.status(500).json({
                 error: err
             });
-        }
-        );
+        });
 }
 
 // get teacher's details
