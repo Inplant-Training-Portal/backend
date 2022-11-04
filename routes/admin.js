@@ -54,7 +54,7 @@ router.get('/teachers/list', adminController.getTeachersList);
 router.post('/allocate-student/:studentId/:teacherName', adminController.allocateStudent);
 
 // get allocated students list
-router.get('/allocated-students/list', adminController.getAllocatedStudentsList);
+router.get('/allocated-students', adminController.getAllocatedStudentsList);
 
 // get unallocated students list
 router.get('/unallocated-students', adminController.getUnallocatedStudentsList);
@@ -66,7 +66,7 @@ router.get('/allocated-teachers', adminController.getAllocatedTeachersList);
 router.get('/unallocated-teachers', adminController.getUnallocatedTeachersList);
 
 // get allocated students list by teacher name
-router.get('/allocated-teacher/:name', adminController.getAllocatedStudentsListByTeacherName);
+router.get('/allocated-student/:teacherName', adminController.getAllocatedStudentsListByTeacherName);
 
 
 // export admin router

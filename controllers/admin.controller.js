@@ -465,32 +465,21 @@ const allocateStudent = (req, res) => {
                     // update student's teacher id
                     student.mentor = teacher._id;
                     student.save()
-                        // if student's teacher id updated successfully then add students id to teacher schema
-                        .then(function (result) {
-                            res.status(200).json({
-                                message: 'Teacher allocated successfully!',
-                                result
-                            });
-                            teacher.students.push(student._id);
-                            teacher.save()
-                                .then(function (result) {
-                                    res.status(200).json({
-                                        message: 'Student allocated successfully!',
-                                        result
-                                    });
-
-                                })
-                                .catch(function (err) {
-                                    res.status(500).json({
-                                        error: err
-                                    });
-                                });
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({
-                                error: err
-                            });
+                    // push student's id to teacher's students array
+                    teacher.students.push(student._id);
+                    teacher.save()
+                    
+                    .then(function (result) {
+                        res.status(200).json({
+                            message: 'Mentor allocated successfully!',
+                            result
                         });
+                    })
+                    .catch(function (err) {
+                        res.status(500).json({
+                            error: err
+                        });
+                    });
                 })
         })
         .catch(function (err) {
@@ -530,7 +519,7 @@ const getUnallocatedStudentsList = (req, res) => {
         });
 }
 
-// get allowcated teachers list
+// get allocated teachers list
 const getAllocatedTeachersList = (req, res) => {
     Teacher.find({ students: { $ne: null } })
         .then(function (teachers) {
@@ -544,6 +533,7 @@ const getAllocatedTeachersList = (req, res) => {
             });
         });
 }
+
 
 // get unallocated teachers list
 const getUnallocatedTeachersList = (req, res) => {
@@ -559,6 +549,7 @@ const getUnallocatedTeachersList = (req, res) => {
             });
         });
 }
+
 
 // get allocated students list by teacher name
 const getAllocatedStudentsListByTeacherName = (req, res) => {
