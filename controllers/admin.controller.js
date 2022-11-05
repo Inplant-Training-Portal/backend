@@ -479,6 +479,7 @@ const allocateStudent = (req, res) => {
                         res.status(500).json({
                             error: err
                         });
+                        res.send(err);
                     });
                 })
         })
