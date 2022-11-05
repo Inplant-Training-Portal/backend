@@ -237,7 +237,7 @@ const addStudent = (req, res) => {
     Student.findOne({ enrollment_no: enrollment_no })
         .then(function (studentData) {
             if (studentData) {
-                res.status(400).json({ message: 'Student already exists' });
+                res.status(400).json({ message: 'Student already exists with same ENROLLMENT NO' });
             } else {
                 // encrypt password
                 bcrypt.hash(password, 10, function (err, hash) {
@@ -343,14 +343,19 @@ const getStudentsList = (req, res) => {
 const addTeacher = (req, res) => {
     const { name, username, password } = req.body;
 
-    // check if admin already exists
+    // check if teacher already exists
     Teacher.findOne({ username: username })
         .then(function (teacherData) {
             if (teacherData) {
-                res.status(400).json({ message: 'Teacher already exists' });
+                res.status(400).json({ message: 'Teacher already exists with same USERNAME' });
             } else {
                 // encrypt password
                 bcrypt.hash(password, 10, function (err, hash) {
+                    if (err) {
+                        res.json({
+                            error: err
+                        })
+                    }
                     const teacher = new Teacher({
                         name,
                         username,
@@ -365,8 +370,9 @@ const addTeacher = (req, res) => {
                         })
                         .catch(function (err) {
                             res.status(500).json({
-                                error: "Oops, something went wrong!"
+                                error: err
                             });
+                            console.log(err);
                         });
                 });
             }
@@ -381,14 +387,13 @@ const deleteTeacher = (req, res) => {
 
     Teacher.findOne({ username: username })
         .then((teacher) => {
-            // if (!teacher) {
-                // res.status(404).json('Teacher not found');
-            // } else {
-            if(teacher){
+            if (!teacher) {
+                res.status(404).json({message : 'Teacher not found'});
+            } else {
                 Teacher.findByIdAndDelete(teacher._id)
                     // check if student exists
-                    .then(function (student) {
-                        if (!student) {
+                    .then(function (teacher) {
+                        if (!teacher) {
                             res.status(404).json({
                                 message: 'Teacher not exist!'
                             });
