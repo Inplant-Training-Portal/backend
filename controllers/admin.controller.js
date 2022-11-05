@@ -351,11 +351,6 @@ const addTeacher = (req, res) => {
             } else {
                 // encrypt password
                 bcrypt.hash(password, 10, function (err, hash) {
-                    if (err) {
-                        res.json({
-                            error: err
-                        })
-                    }
                     const teacher = new Teacher({
                         name,
                         username,
@@ -370,7 +365,7 @@ const addTeacher = (req, res) => {
                         })
                         .catch(function (err) {
                             res.status(500).json({
-                                error: err
+                                error: "Oops, something went wrong!"
                             });
                         });
                 });

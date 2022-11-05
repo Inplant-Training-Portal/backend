@@ -5,8 +5,12 @@ const Teacher = require('../models/Teacher.model');
 // import packages
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const multer = require('multer');
 
 const secret = "secretkey"
+
+const upload = multer({ dest: 'uploads/' });
 
 // login
 const loginStudent = (req, res) => {
@@ -176,28 +180,27 @@ const getTeacherProfile = async (req, res) => {
     }
 }
 
-// upload file
+// upload file to google drive
 const uploadFile = async (req, res) => {
     try {
-        const { file } = req;
-        const { title, description } = req.body;
-        const student = await Student.findById(req.student
-            .id);
-        const newFile = {
-            title,
-            description,
-            fileLink: file.path,
+        const student = await Student.findById(req.student.id);
+        const file = req.file;
+        const fileObj = {
+            name: file.originalname,
+            type: file.mimetype,
             size: file.size,
-            key: file.filename,
-            owner: student._id,
+            path: file.path
         };
-        student.files.push(newFile);
+        student.files.push(fileObj);
         await student.save();
-        res.status(200).json(student);
+        res.status(200).json({ message: 'File uploaded successfully' });
     } catch (err) {
-        res.status(500).json({ message: 'Error in saving file' });
+        res.status(500).json({ message: 'Error in uploading file' });
     }
 }
+
+
+
 
 // view file
 const viewFile = async (req, res) => {

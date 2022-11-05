@@ -6,17 +6,33 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
-// const fs = require('fs');
-// const {google} = require('googleapis');
+const fs = require('fs');
+const readline = require('readline');
+const {google} = require('googleapis');
 
+// import KEYFILEPATH
+const KEYFILEPATH = require('./inplant-training-portal-fa5bda6a1aaf.json');
+
+// add scopes to access google account
+const scopes = ['https://www.googleapis.com/auth/drive'];
+
+const auth = new google.auth.GoogleAuth({
+    keyFile: KEYFILEPATH,
+    scopes: scopes,
+});
+
+// configure drive version and give auth
+const drive = google.drive({version: 'v3', auth});
+
+// create express app
 const app = express();
+
+// port number
 const port = 9000;
-// const scopes = ['https://www.googleapis.com/auth/drive'];
-// const authPath = require('./inplant-training-portal-fa5bda6a1aaf.json');
-// const service = google.drive({scope: scopes, auth: authPath});
 
 // use cors middleware
 app.use(cors());
+
 // use body-parser middleware
 app.use(bodyParser.json());
 
