@@ -145,6 +145,45 @@ const changeTeacherPassword = (req, res) => {
     }
 }
 
+// get student list
+const getStudentsList = (req, res) => {
+    Student.find({}, function (err, students) {
+        if (err) {
+            res.status(500).json({
+                message: 'Oops, something went wrong!',
+                error: err
+            });
+        }
+        res.status(200).json({
+            students
+        });
+    }
+    );
+}
+
+const getAllocatedStudentsListByTeacherName = (req, res) => {
+    const teacherName = req.params.teacherName;
+    Teacher.findOne({ name: teacherName })
+        .then(function (teacher) {
+            Student.find({ mentor: teacher._id })
+                .then(function (students) {
+                    res.status(200).json({
+                        students
+                    });
+                })
+                .catch(function (err) {
+                    res.status(500).json({
+                        error: err
+                    });
+                });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
 // student info
 const getStudentProfile = async (req, res) => {
     try {
@@ -216,6 +255,8 @@ module.exports={
     loginTeacher,
     updateTeacherInfo,
     changeTeacherPassword,
+    getStudentsList,
+    getAllocatedStudentsListByTeacherName,
     getStudentProfile,
     getTeacherProfile,
     viewFile,

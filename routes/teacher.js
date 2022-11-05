@@ -17,6 +17,12 @@ router.post('/update/password/:id', teacherController.changeTeacherPassword);
 // get teacher profile
 // router.get('/profile/:id', teacherController.getTeacherProfile);
 
+// get all students
+router.get('/students/list', teacherController.getStudentsList);
+
+// get allocated students list
+router.get('/allocated-students/:teacherName', teacherController.getAllocatedStudentsListByTeacherName);
+
 // get student profile
 router.get('/student-profile/:id', teacherController.getStudentProfile);
 
