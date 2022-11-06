@@ -451,6 +451,94 @@ const getTeachersList = (req, res) => {
 
 // Allocate Functions
 
+// allocate single student
+const allocateSingleStudent = async(req,res) => {
+    // get student id and teacher name from params
+    const studentId = req.params.studentId;
+    const teacherName = req.params.teacherName;
+    // find teacher by name
+    Teacher.findOne({ username: teacherName })
+        .then(function (teacher) {          
+            // find student by id
+            Student.findById(studentId)
+                .then(function (student) {
+                    if(teacher.students.includes(studentId)){
+                        res.status(401).json({message:"Student is already allocated"})
+                    }else{
+                        // update student's teacher id
+                        student.mentor = teacher._id;
+                        student.save()
+                        // push student's id to teacher's students array
+                        teacher.students.push(student._id);
+                        teacher.save()
+                        
+                        .then(function (result) {
+                            res.status(200).json({
+                                message: 'Mentor allocated successfully!',
+                                result
+                            });
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({
+                                message:"Error in saving data to DB",
+                                error: err
+                            });
+                        });
+                    }
+
+                })
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                message:"data not found",
+                error: err
+            });
+        })
+}
+
+// deallocate single student
+const deallocateSingleStudent = (req,res) => {
+    // get student id and teacher name from params
+    const studentId = req.params.studentId;
+    const teacherName = req.params.teacherName;
+    // find teacher by name
+    Teacher.findOne({ username: teacherName })
+        .then(function (teacher) {          
+            // find student by id
+            Student.findById(studentId)
+                .then(function (student) {
+                 
+                        // update student's teacher id
+                        student.mentor = "";
+                        student.save()
+                        // push student's id to teacher's students array
+                        teacher.students.pop(student._id);
+                        teacher.save()
+                        
+                        .then(function (result) {
+                            res.status(200).json({
+                                message: 'Mentor deallocated successfully!',
+                                result
+                            });
+                        })
+                        .catch(function (err) {
+                            res.status(500).json({
+                                message:"Error in saving data to DB",
+                                error: err
+                            });
+                        });
+                    
+
+                })
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                message:"data not found",
+                error: err
+            });
+        })
+}
+
 // allocate student's id to teacher
 const allocateStudent = (req, res) => {
     // get student id and teacher name from params
@@ -631,6 +719,8 @@ module.exports = {
     deleteTeacher,
     getTeacherDetails,
     getTeachersList,
+    allocateSingleStudent,
+    deallocateSingleStudent,
     allocateStudent,
     unallocateStudent,
     getAllocatedStudentsList,
