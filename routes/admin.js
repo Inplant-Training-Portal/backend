@@ -53,6 +53,9 @@ router.get('/teachers/list', adminController.getTeachersList);
 // allocate student
 router.post('/allocate-student/:studentId/:teacherName', adminController.allocateStudent);
 
+//unallocate student
+router.post('/unallocate-student/:studentId', adminController.unallocateStudent);
+
 // get allocated students list
 router.get('/allocated-students', adminController.getAllocatedStudentsList);
 

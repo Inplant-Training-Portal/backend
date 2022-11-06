@@ -490,6 +490,45 @@ const allocateStudent = (req, res) => {
         })
 }
 
+// unallocate student's id from teacher
+const unallocateStudent = (req, res) => {
+    // get student id and teacher name from params
+    const studentId = req.params.studentId;
+    const teacherName = req.params.teacherName;
+    // find teacher by name
+    Teacher.findOne({ name: teacherName })
+        .then(function (teacher) {
+            // find student by id
+            Student.findById(studentId)
+                .then(function (student) {
+                    // update student's teacher id
+                    student.mentor = null;
+                    student.save()
+                    // remove student's id from teacher's students array
+                    teacher.students.pull(student._id);
+                    teacher.save()
+
+                    .then(function (result) {
+                        res.status(200).json({
+                            message: 'Mentor unallocated successfully!',
+                            result
+                        });
+                    })
+                    .catch(function (err) {
+                        res.status(500).json({
+                            error: err
+                        });
+                        res.send(err);
+                    });
+                })
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        })
+}
+
 // get allowcated students list
 const getAllocatedStudentsList = (req, res) => {
     Student.find({ mentor: { $ne: null } })
@@ -593,6 +632,7 @@ module.exports = {
     getTeacherDetails,
     getTeachersList,
     allocateStudent,
+    unallocateStudent,
     getAllocatedStudentsList,
     getUnallocatedStudentsList,
     getAllocatedTeachersList,
