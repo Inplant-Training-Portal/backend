@@ -6,23 +6,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const fs = require('fs');
-const readline = require('readline');
-const {google} = require('googleapis');
-
-// import KEYFILEPATH
-const KEYFILEPATH = require('./inplant-training-portal-fa5bda6a1aaf.json');
-
-// add scopes to access google account
-const scopes = ['https://www.googleapis.com/auth/drive'];
-
-const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
-    scopes: scopes,
-});
-
-// configure drive version and give auth
-const drive = google.drive({version: 'v3', auth});
+const multer = require('multer');
 
 // create express app
 const app = express();
@@ -35,9 +19,13 @@ app.use(cors());
 
 // use body-parser middleware
 app.use(bodyParser.json());
+// express static files
+app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
 
 // connect to mongodb
-mongoose.connect("mongodb+srv://sample:sample@inplant-training.ohnrlch.mongodb.net/?retryWrites=true&w=majority", { useNewUrlParser: true });
+const mongouri =  "mongodb+srv://sample:sample@inplant-training.ohnrlch.mongodb.net/?retryWrites=true&w=majority"
+mongoose.connect(mongouri, { useNewUrlParser: true });
 const connection = mongoose.connection;
 
 connection.once('open', function() {

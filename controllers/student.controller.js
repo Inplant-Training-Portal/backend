@@ -1,15 +1,12 @@
 // import the student model
 const Student = require('../models/Student.model');
 const Teacher = require('../models/Teacher.model');
+const File = require('../models/File.model');
 
 // import packages
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
+const path = require('path');
 const multer = require('multer');
-
-const secret = "secretkey"
-
 const upload = multer({ dest: 'uploads/' });
 
 // login
@@ -30,11 +27,8 @@ const loginStudent = (req, res) => {
                     });
                 }
                 if (result) {
-                    // generate token
-                    let token = jwt.sign({ username: student._id }, secret, { expiresIn: '1h' });
                     res.status(200).json({
                         message: 'Login successful!',
-                        token,
                         user: student
                     });
                 } 
@@ -150,26 +144,6 @@ const changeStudentPassword = (req, res) => {
 }
 
 // get student profile
-const getStudentProfile = async (req, res) => {
-    try {
-// check if header has authorization
-        if (req.headers.authorization) {
-            const token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, 'randomString');
-            const student = await Student.findById(decoded.student.id);
-            if (!student) {
-                return res.status(404).json({ message: 'Student not found' });
-            }
-            res.status(200).json(student);
-        } else {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-    } catch (e) {
-        res.send({ message: 'Error in Fetching student' });
-    }
-}
-
-// get student profile
 const getTeacherProfile = async (req, res) => {
     try {
         // request student is _id of student
@@ -180,60 +154,9 @@ const getTeacherProfile = async (req, res) => {
     }
 }
 
-// upload file to google drive
-const uploadFile = async (req, res) => {
-    try {
-        const student = await Student.findById(req.student.id);
-        const file = req.file;
-        const fileObj = {
-            name: file.originalname,
-            type: file.mimetype,
-            size: file.size,
-            path: file.path
-        };
-        student.files.push(fileObj);
-        await student.save();
-        res.status(200).json({ message: 'File uploaded successfully' });
-    } catch (err) {
-        res.status(500).json({ message: 'Error in uploading file' });
-    }
-}
-
-
-
-
-// view file
-const viewFile = async (req, res) => {
-    try {
-        const student = await Student.findById(req.student
-            .id);
-        const file = student.files.id(req.params.id);
-        res.json(file);
-    } catch (err) {
-        res.status(500).json({ message: 'Error in fetching file' });
-    }
-}
-
-// download file
-const downloadFile = async (req, res) => {
-    try {
-        const student = await Student.findById(req.student
-            .id);
-        const file = student.files.id(req.params.id);
-        res.download(file.fileLink);
-    } catch (err) {
-        res.status(500).json({ message: 'Error in downloading file' });
-    }
-}
-
-
 module.exports={
     loginStudent,
     updateStudentInfo,
     changeStudentPassword,
-    getStudentProfile,
-    getTeacherProfile,
-    uploadFile,
-    viewFile,
-    downloadFile
+    getTeacherProfile
 }
