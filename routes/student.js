@@ -21,6 +21,9 @@ router.post('/update/password/:id', studentController.changeStudentPassword);
 // get teacher profile
 router.get('/teacher/:id', studentController.getTeacherProfile);
 
+// get all documents
+router.get('/doc/:id',studentController.getDocs);
+
 // upload document
 // router.post('/file/upload',studentController.uploadFile);
 

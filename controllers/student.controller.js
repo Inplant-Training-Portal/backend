@@ -143,6 +143,10 @@ const changeStudentPassword = (req, res) => {
     }
 }
 
+const getDocs = (req,res) =>{
+    res.json({message:"working"})
+}
+
 // get student profile
 const getTeacherProfile = async (req, res) => {
     try {
@@ -158,5 +162,6 @@ module.exports={
     loginStudent,
     updateStudentInfo,
     changeStudentPassword,
+    getDocs,
     getTeacherProfile
 }
