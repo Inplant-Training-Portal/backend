@@ -12,7 +12,7 @@ const multer = require('multer');
 const app = express();
 
 // port number
-const port = process.env.PORT 9000;
+const port = process.env.PORT || 9000;
 
 // use cors middleware
 app.use(cors());
