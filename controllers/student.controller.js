@@ -31,8 +31,7 @@ const loginStudent = (req, res) => {
                         message: 'Login successful!',
                         user: student
                     });
-                } 
-                else {
+                } else {
                     res.status(401).json({
                         message: 'Password does not match!'
                     });
