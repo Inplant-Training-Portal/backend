@@ -23,6 +23,9 @@ router.post('/update/password/:id', adminController.changeAdminPassword);
 // get admin by id
 // router.get('/info/:id', adminController.getAdminById);
 
+// get students documents
+router.get('/students/:id/documents', adminController.getStudentDocuments);
+
 // get all admins
 router.get('/list', adminController.getAllAdmins);
 

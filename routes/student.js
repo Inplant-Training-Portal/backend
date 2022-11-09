@@ -39,6 +39,7 @@ router.post("/file/upload/:id", upload.single('file'), async (req, res) => {
     const {originalname,path} = req.file;
     const fileData = new File({
         title:req.body.title,
+        owner:req.params.id,
         path: path,
         originalname: originalname,
         url:"http://localhost:9000/student/"+path
@@ -68,9 +69,6 @@ router.get('/uploads/:id',(req, res) =>{
             }
         })
     });
-
-// update contact
-// router.put('/update/:id',studentController.updateContact)
 
 // export router
 module.exports = router;

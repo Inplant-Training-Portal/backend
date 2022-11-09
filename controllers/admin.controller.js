@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin.model');
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
+const File = require('../models/File.model');
 
 const secret = 'secretkey';
 
@@ -305,6 +306,26 @@ const deleteStudent = (req, res) => {
                 error: err
             });
         });
+}
+
+// get student's documents
+const getStudentDocuments = (req, res) => {
+    const id = req.params.id;
+
+    // get students id from params and return all documents
+    File.find({ owner: id })
+        .then(function (documents) {
+            res.status(200).json({
+                documents
+            });
+        }
+        )
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        }
+        );
 }
 
 // get student's details
@@ -709,6 +730,7 @@ module.exports = {
     addStudent,
     deleteStudent,
     getStudentDetails,
+    getStudentDocuments,
     getStudentsList,
     addTeacher,
     deleteTeacher,

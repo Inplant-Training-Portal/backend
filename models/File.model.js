@@ -5,7 +5,8 @@ const File = new mongoose.Schema({
         type:String
     },
     owner:{
-        type:String
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Student"
     },
   path: {
     type: String,
