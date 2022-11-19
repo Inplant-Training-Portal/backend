@@ -1,28 +1,7 @@
-###
-
 POST http://localhost:9000/admin/login
 Content-Type: application/json
 
 {
     "username": "admin",
     "password": "admin"
-}
-
-###
-
-GET http://localhost:9000/admin/list
-
-###
-
-GET http://localhost:9000/admin/info/634c3e78ff4562da08b5bf9b
-
-###
-
-POST http://localhost:9000/admin/add-student
-Content-Type: application/json
-
-{
-    "name": "student1",
-    "enrollment_no": "student1",
-    "password": "student123"
 }
