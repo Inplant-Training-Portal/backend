@@ -1,11 +1,15 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const upload = require('express-fileupload');
+const importExcel = require('convert-excel-to-json');
 
 // admin model
 const Admin = require('../models/Admin.model');
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
 const File = require('../models/File.model');
+const Excel = require('../models/Excel.model');
 
 const secret = 'secretkey';
 
@@ -268,6 +272,60 @@ const addStudent = (req, res) => {
                 });
             }
         })
+}
+
+// add student using excel sheet
+const addStudentUsingExcel = (req, res) => {
+    const file = req.file;
+    console.log(file);
+    const excelFileData = new Excel({
+        originalname: file.originalname,
+        path: file.path
+    });
+    excelFileData.save()
+
+    // read excel file
+    let result = importExcel({
+        sourceFile: file.path,
+        header: {
+            rows: 1
+        },
+        columnToKey: {
+            A: 'name',
+            B: 'enrollment_no',
+            C: 'password'
+        },
+        sheets: ['Sheet1']
+    });
+
+    // add students who are does not exists
+    result.Sheet1.forEach(function (studentList) {
+        Student.findOne({ enrollment_no: studentList.enrollment_no })
+            .then(function (studentData) {
+                if(studentData == null){
+                    // encrypt password
+                    bcrypt.hash(studentList.password, 10, function (err, hash) {
+                        if (err) {
+                            res.json({
+                                error: err
+                            })
+                        }
+                        const student = new Student({
+                            name: studentList.name,
+                            enrollment_no: studentList.enrollment_no,
+                            password: hash
+                        });
+                        student.save()
+                            .then(function () {
+                            }
+                            )
+                    });
+                }
+            })
+    });
+    res.status(201).json({
+        message: "Students added successfully!"
+    });
 }
 
 // delete student
@@ -728,6 +786,7 @@ module.exports = {
     updateAdminInfo,
     changeAdminPassword,
     addStudent,
+    addStudentUsingExcel,
     deleteStudent,
     getStudentDetails,
     getStudentDocuments,

@@ -1,13 +1,10 @@
 // import the student model
 const Student = require('../models/Student.model');
 const Teacher = require('../models/Teacher.model');
-const File = require('../models/File.model');
 
 // import packages
 const bcrypt = require('bcrypt');
-const path = require('path');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
 
 // login
 const loginStudent = (req, res) => {
@@ -142,10 +139,6 @@ const changeStudentPassword = (req, res) => {
     }
 }
 
-const getDocs = (req,res) =>{
-    res.json({message:"working"})
-}
-
 // get student profile
 const getTeacherProfile = async (req, res) => {
     try {
@@ -161,6 +154,5 @@ module.exports={
     loginStudent,
     updateStudentInfo,
     changeStudentPassword,
-    getDocs,
     getTeacherProfile
 }

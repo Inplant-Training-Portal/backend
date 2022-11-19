@@ -1,6 +1,8 @@
 // admin router
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const upload = multer({ dest: 'excel/' });
 
 // import admin controller
 const adminController = require('../controllers/admin.controller.js');
@@ -31,6 +33,9 @@ router.get('/list', adminController.getAllAdmins);
 
 // add student
 router.post('/add-student', adminController.addStudent);
+
+// add student using excel file
+router.post('/add-student/excel', upload.single('file'), adminController.addStudentUsingExcel);
 
 // delete student
 router.post('/delete-student', adminController.deleteStudent);
