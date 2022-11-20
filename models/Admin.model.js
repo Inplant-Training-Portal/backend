@@ -3,6 +3,11 @@ const Schema = mongoose.Schema;
 
 // admin schema
 const AdminSchema = new Schema({
+    // ADMIN DETAILS
+    name: {
+        type: String,
+        required: true
+    },
     username: {
         type: String,
         required: true,
@@ -12,10 +17,7 @@ const AdminSchema = new Schema({
         type: String,
         required: true
     },
-    name: {
-        type: String,
-        required: true
-    },
+    // ADMIN CONTACT DETAILS
     email: {
         type: String
     },

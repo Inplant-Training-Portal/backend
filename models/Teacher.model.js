@@ -1,9 +1,9 @@
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // teacher schema
 const TeacherSchema = new Schema({
+    // TEACHER DETAILS
     name: {
         type: String,
         required: true
@@ -17,15 +17,18 @@ const TeacherSchema = new Schema({
         type: String,
         required: true
     },
-    students: {
-        type: Array
-    },
+    // TEACHER CONTACT DETAILS
     email: {
         type: String
     },
     mobile_no: {
         type: String
+    },
+    // STUDENTS ALLOCATED
+    students: {
+        type: Array
     }
+
 });
 
 // export teacher model
