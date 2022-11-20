@@ -462,6 +462,61 @@ const addTeacher = (req, res) => {
 }
 
 
+// add teacher using excel sheet
+const addTeacherUsingExcel = (req, res) => {
+    const file = req.file;
+    const excelFileData = new Excel({
+        originalname: file.originalname,
+        path: file.path
+    });
+    excelFileData.save()
+
+    // read excel file
+    let result = importExcel({
+        sourceFile: file.path,
+        header: {
+            rows: 1
+        },
+        columnToKey: {
+            A: 'name',
+            B: 'username',
+            C: 'password',
+            D: 'email',
+            E: 'mobile_no'
+        },
+        sheets: ['Sheet1']
+    });
+
+    // add students who are does not exists
+    result.Sheet1.forEach(function (teacherList) {
+        Teacher.findOne({ username: teacherList.username })
+            .then(function (teacherData) {
+                if(teacherData == null){
+                    // encrypt password
+                    bcrypt.hash(teacherList.password, 10, function (err, hash) {
+                        if (err) {
+                            res.json({
+                                error: err
+                            })
+                        }
+                        const teacher = new Teacher({
+                            name: teacherList.name,
+                            username: teacherList.username,
+                            password: hash,
+                            email: teacherList.email,
+                            mobile_no: teacherList.mobile_no
+                        });
+                        teacher.save()
+                    });
+                }
+            })
+    });
+    res.status(201).json({
+        message: "Teachers added successfully!"
+    });
+}
+
+
 // delete teacher
 const deleteTeacher = (req, res) => {
 
@@ -795,6 +850,7 @@ module.exports = {
     getStudentDocuments,
     getStudentsList,
     addTeacher,
+    addTeacherUsingExcel,
     deleteTeacher,
     getTeacherDetails,
     getTeachersList,

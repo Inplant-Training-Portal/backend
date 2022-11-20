@@ -49,6 +49,9 @@ router.get('/students/list', adminController.getStudentsList);
 // add teacher
 router.post('/add-teacher', adminController.addTeacher);
 
+// add teacher using excel file
+router.post('/add-teacher/excel', upload.single('file'), adminController.addTeacherUsingExcel);
+
 // delete teacher
 router.post('/delete-teacher', adminController.deleteTeacher);
 
