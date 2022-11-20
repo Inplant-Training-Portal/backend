@@ -25,19 +25,21 @@ const loginTeacher = (req, res) => {
                         message: 'Login failed! Please try again.'
                     });
                 }
-                if (result) {
-                    // generate token
-                    let token = jwt.sign({ username: teacher._id }, secret, { expiresIn: '1h' });
-                    res.status(200).json({
-                        message: 'Login successful!',
-                        token,
-                        user: teacher
-                    });
-                } 
                 else {
-                    res.status(401).json({
-                        message: 'Password does not match!'
-                    });
+                    if (result) {
+                        // generate token
+                        let token = jwt.sign({ username: teacher._id }, secret, { expiresIn: '1h' });
+                        res.status(200).json({
+                            message: 'Login successful!',
+                            token,
+                            user: teacher
+                        });
+                    } 
+                    else {
+                        res.status(401).json({
+                            message: 'Password does not match!'
+                        });
+                    }
                 }
             });
         } else {
