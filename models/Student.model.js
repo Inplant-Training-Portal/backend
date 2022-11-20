@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 
 // student schema
 const StudentSchema = new Schema({
+    // STUDENT DETAILS
     name: {
         type: String,
         required: true
@@ -17,18 +18,35 @@ const StudentSchema = new Schema({
         type: String,
         required: true
     },
-    mentor: {
-        type: String
-    },
+    // STUDENT CONTACT DETAILS
     email: {
         type: String,
     },
     mobile_no: {
         type: String,
     },
+    // FACULTY MENTOR DETAILS
+    faculty_mentor_name: {
+        type: String
+    },
+    faculty_mentor_email: {
+        type: String
+    },
+    faculty_mentor_contact: {
+        type: String
+    },
+    // ORGANIZATION MENTOR DETAILS
+    organization_mentor_name: {
+        type: String
+    },
+    organization_mentor_email: {
+        type: String
+    },
+    // DOCUMENTS
     documents: {
         type: Array
     },
+    // LAST UPDATED
     date: {
         type: Date,
         default: Date.now
