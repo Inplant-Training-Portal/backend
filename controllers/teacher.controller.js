@@ -1,10 +1,12 @@
+// import packages
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const nodeMailer = require('nodemailer');
+
 // import the student model
 const Student = require('../models/Student.model');
 const Teacher = require('../models/Teacher.model');
 
-// import packages
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 
 const secret = "secretkey"
 
@@ -252,6 +254,30 @@ const updateTeacherProfile = async (req, res) => {
     }
 }
 
+// send mail
+const sendMail = (req, res) => {
+    const { email, subject, message } = req.body;
+    const mailOptions = {
+        from: '',
+        to: email,
+        subject: subject,
+        text: message
+    };
+    transporter.sendMail(mailOptions, function (err, data) {
+        if (err) {
+            res.status(500).json({
+                message: 'Oops, something went wrong!',
+                error: err
+            });
+        } else {
+            res.status(200).json({
+                message: 'Email sent successfully!'
+            });
+        }
+    });
+}
+
+
 
 module.exports={
     loginTeacher,
@@ -263,5 +289,6 @@ module.exports={
     getTeacherProfile,
     viewFile,
     downloadFile,
-    updateTeacherProfile
+    updateTeacherProfile,
+    sendMail
 }
