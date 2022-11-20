@@ -277,7 +277,6 @@ const addStudent = (req, res) => {
 // add student using excel sheet
 const addStudentUsingExcel = (req, res) => {
     const file = req.file;
-    console.log(file);
     const excelFileData = new Excel({
         originalname: file.originalname,
         path: file.path
@@ -293,7 +292,9 @@ const addStudentUsingExcel = (req, res) => {
         columnToKey: {
             A: 'name',
             B: 'enrollment_no',
-            C: 'password'
+            C: 'password',
+            D: 'email',
+            E: 'mobile_no'
         },
         sheets: ['Sheet1']
     });
@@ -313,7 +314,9 @@ const addStudentUsingExcel = (req, res) => {
                         const student = new Student({
                             name: studentList.name,
                             enrollment_no: studentList.enrollment_no,
-                            password: hash
+                            password: hash,
+                            email: studentList.email,
+                            mobile_no: studentList.mobile_no
                         });
                         student.save()
                             .then(function () {
