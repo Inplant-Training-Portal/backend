@@ -35,6 +35,9 @@ const StudentSchema = new Schema({
         type: String
     },
     // ORGANIZATION MENTOR DETAILS
+    organization_name: {
+        type: String
+    },
     organization_mentor_name: {
         type: String
     },
