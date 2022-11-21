@@ -25,7 +25,7 @@ const StudentSchema = new Schema({
         type: String,
     },
     // FACULTY MENTOR DETAILS
-    faculty_mentor_name: {
+    faculty_mentor: {
         type: String
     },
     faculty_mentor_email: {

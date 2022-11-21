@@ -294,7 +294,10 @@ const addStudentUsingExcel = (req, res) => {
             B: 'enrollment_no',
             C: 'password',
             D: 'email',
-            E: 'mobile_no'
+            E: 'mobile_no',
+            F: 'organization_name',
+            G: 'organization_mentor_name',
+            H: 'organization_mentor_email'
         },
         sheets: ['Sheet1']
     });
@@ -316,7 +319,10 @@ const addStudentUsingExcel = (req, res) => {
                             enrollment_no: studentList.enrollment_no,
                             password: hash,
                             email: studentList.email,
-                            mobile_no: studentList.mobile_no
+                            mobile_no: studentList.mobile_no,
+                            organization_name: studentList.organization_name,
+                            organization_mentor_name: studentList.organization_mentor_name,
+                            organization_mentor_email: studentList.organization_mentor_email
                         });
                         student.save()
                             .then(function () {
@@ -600,7 +606,9 @@ const allocateSingleStudent = async(req,res) => {
             Student.findById(studentId)
                 .then(function (student) {
                     // update student's teacher id
-                    student.mentor = teacher._id;
+                    student.faculty_mentor = teacher._id;
+                    student.faculty_mentor_email = teacher.email;
+                    student.faculty_mentor_mobile_no = teacher.mobile_no;
                     student.save()
                     // push student's id to teacher's students array
                     teacher.students.push(student._id);
@@ -722,7 +730,7 @@ const unallocateStudent = (req, res) => {
             Student.findById(studentId)
                 .then(function (student) {
                     // update student's teacher id
-                    student.mentor = null;
+                    student.faculty_mentor = null;
                     student.save()
                     // remove student's id from teacher's students array
                     teacher.students.pull(student._id);
@@ -751,7 +759,7 @@ const unallocateStudent = (req, res) => {
 
 // get allowcated students list
 const getAllocatedStudentsList = (req, res) => {
-    Student.find({ mentor: { $ne: null } })
+    Student.find({ faculty_mentor: { $ne: null } })
         .then(function (students) {
             res.status(200).json({
                 students
@@ -766,7 +774,7 @@ const getAllocatedStudentsList = (req, res) => {
 
 // get unallocated students list
 const getUnallocatedStudentsList = (req, res) => {
-    Student.find({ mentor: null })
+    Student.find({ faculty_mentor: null })
         .then(function (students) {
             res.status(200).json({
                 students
@@ -816,7 +824,7 @@ const getAllocatedStudentsListByTeacherName = (req, res) => {
     const teacherName = req.params.teacherName;
     Teacher.findOne({ name: teacherName })
         .then(function (teacher) {
-            Student.find({ mentor: teacher._id })
+            Student.find({ faculty_mentor: teacher._id })
                 .then(function (students) {
                     res.status(200).json({
                         students
