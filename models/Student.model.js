@@ -31,7 +31,7 @@ const StudentSchema = new Schema({
     faculty_mentor_email: {
         type: String
     },
-    faculty_mentor_contact: {
+    faculty_mentor_mobile_no: {
         type: String
     },
     // ORGANIZATION MENTOR DETAILS
