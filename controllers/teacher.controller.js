@@ -2,11 +2,17 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodeMailer = require('nodemailer');
+const excelJS = require('exceljs');
+var { google } = require('googleapis');
+const keys = require('../inplant-training-portal-369403-dec6828816c4.json')
 
 // import the student model
 const Student = require('../models/Student.model');
 const Teacher = require('../models/Teacher.model');
+const Marks = require('../models/Marks.model');
 
+// import .env variables
+require('dotenv').config();
 
 const secret = "secretkey"
 
@@ -169,7 +175,7 @@ const getAllocatedStudentsListByTeacherName = (req, res) => {
     const teacherName = req.params.teacherName;
     Teacher.findOne({ name: teacherName })
         .then(function (teacher) {
-            Student.find({ mentor: teacher._id })
+            Student.find({ faculty_mentor: teacher._id })
                 .then(function (students) {
                     res.status(200).json({
                         students
@@ -256,25 +262,173 @@ const updateTeacherProfile = async (req, res) => {
 
 // send mail
 const sendMail = (req, res) => {
-    const { email, subject, message } = req.body;
+    const { name, faculty_mentor_name, organization_mentor_email } = req.body;
+    const query = `?name=${name}`
+    const link = 'http://localhost:5173/marks-assessment/' + query;
+
+    // setup transporter
+    const transporter = nodeMailer.createTransport({
+        service: 'hotmail',
+        auth: {
+            // take from .env file
+            user: process.env.EMAIL,
+            pass: process.env.PASSWORD
+        }
+    });
+
+    // setup email data
     const mailOptions = {
-        from: '',
-        to: email,
-        subject: subject,
-        text: message
+        from: process.env.EMAIL,
+        to: organization_mentor_email,
+        subject: "Ask for Marks Evaluation",
+        text: "Dear Sir/Madam, I am " + faculty_mentor_name + 
+        " from the Department of Computer Engineering, Government Polytechnic Mumbai. I would like to ask you to evaluate the marks of my student " + 
+        name + 
+        " . Google Form link for the same is attached below Thank you.\n\n" + 
+        link
     };
-    transporter.sendMail(mailOptions, function (err, data) {
+
+    // send mail
+    transporter.sendMail(mailOptions, function (err, info) {
         if (err) {
+            console.log(err);
             res.status(500).json({
                 message: 'Oops, something went wrong!',
                 error: err
             });
         } else {
             res.status(200).json({
-                message: 'Email sent successfully!'
+                message: 'Mail sent successfully!'
             });
         }
     });
+}
+
+// send details
+const sendDetails = (req, res) => {
+    const query = req.params.studentName;
+    const studentName = query.split('=')[1];
+
+    Student
+        .findOne
+        ({
+            name: studentName
+        })
+        .then(function (student) {
+            res.status(200).json({
+                student
+            });
+        })
+        .catch(function (err) {
+            res.status(500).json({
+                error: err,
+                message: 'Oops, something went wrong!'
+            });
+        });
+}
+
+// get and upload details
+const getAndUploadDetails = (req, res) => {
+    const studentName = req.params.studentName;
+    const { discipline, attitude, maintenance, report, achievement } = req.body;
+
+    Student.findOne({name: studentName})
+        .then(function (student) {
+            // create marks
+            const marks = new Marks({
+                student: student._id,
+                discipline,
+                attitude,
+                maintenance,
+                report,
+                achievement
+            });
+            marks.save()
+
+            // update student
+            student.marks = marks._id;
+            student.save()
+
+            // save marks in excel file
+            const fileName = "./excel/marks.xlsx";
+            const workbook = new excelJS.Workbook();
+            
+            workbook.xlsx.readFile(fileName)
+            .then(() => {
+                const worksheet = workbook.getWorksheet(1);
+                const lastRow = worksheet.lastRow;
+                const getRowInsert = worksheet.getRow(++(lastRow.number));
+                getRowInsert.getCell(1).value = student.enrollment_no;
+                getRowInsert.getCell(2).value = studentName;
+                getRowInsert.getCell(3).value = discipline;
+                getRowInsert.getCell(4).value = attitude;
+                getRowInsert.getCell(5).value = maintenance;
+                getRowInsert.getCell(6).value = report;
+                getRowInsert.getCell(7).value = achievement;
+                getRowInsert.commit();
+                workbook.xlsx.writeFile(fileName);
+            });
+
+            // create client
+            const client = new google.auth.JWT(
+                keys.client_email,
+                null,
+                keys.private_key,
+                ['https://www.googleapis.com/auth/spreadsheets']
+            );
+
+            // authorize client
+            client.authorize(function(err, tokens) {
+                if (err) {
+                    console.log(err);
+                    return;
+                } else {
+                    console.log('Connected!');
+                    gsrun(client);
+                }
+            });
+
+            async function gsrun(cl) {
+                const gsapi = google.sheets({ version: 'v4', auth: cl });
+            
+                const wb = new excelJS.Workbook();
+                let excelFile = await wb.xlsx.readFile('./excel/marks.xlsx')
+                
+                // get data from Sheet1
+                let sheet = excelFile.getWorksheet('Sheet1');
+                let data = sheet.getSheetValues();
+            
+                // discard 1 empty item from each row
+                data = data.map(function(r) {
+                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7]];
+                });
+            
+                // discard sheet 1 empty item
+                data.shift();
+                // console.log(data1);
+                
+                //update function
+                const update = {
+                    spreadsheetId: '1DbOUPg4Glor3oZszDejcEc_gPmb9UZ72Kdpig6ykaLc',
+                    range: 'Sheet1!A1',
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values: data }
+                };
+            
+                let res = await gsapi.spreadsheets.values.update(update);
+            }
+
+            res.status(200).json({
+                message: 'Marks uploaded successfully!'
+            });
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.status(500).json({
+                error: err,
+                message: 'Oops, something went wrong!'
+            });
+        });
 }
 
 
@@ -290,5 +444,7 @@ module.exports={
     viewFile,
     downloadFile,
     updateTeacherProfile,
-    sendMail
+    sendMail,
+    sendDetails,
+    getAndUploadDetails
 }

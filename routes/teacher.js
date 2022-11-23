@@ -35,6 +35,15 @@ router.get('/file/view/:id', teacherController.viewFile);
 // download files
 router.get('/file/download/:id', teacherController.downloadFile);
 
+// send email
+router.post('/send-email', teacherController.sendMail);
+
+// send details
+router.get('/send-details/:studentName', teacherController.sendDetails);
+
+// get and upload details
+router.post('/upload-details/:studentName', teacherController.getAndUploadDetails);
+
 
 // export router
 module.exports = router;
