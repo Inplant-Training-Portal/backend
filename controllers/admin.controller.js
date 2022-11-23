@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const importExcel = require('convert-excel-to-json');
+const fs = require('fs');
+
 
 // import models
 const Admin = require('../models/Admin.model');
@@ -274,6 +276,8 @@ const addStudent = (req, res) => {
 // add student using excel sheet
 const addStudentUsingExcel = (req, res) => {
     const file = req.file;
+    const path = file.path;
+    console.log(path);
 
     // read excel file
     let result = importExcel({
@@ -293,6 +297,19 @@ const addStudentUsingExcel = (req, res) => {
         },
         sheets: ['Sheet1']
     });
+
+    // delete file after reading
+    fs.unlink
+        (file
+            .path, function (err) {
+                if (err) {
+                    console.log(err);
+                    res.status(500).json({
+                        error: err
+                    });
+                }
+            });
+
 
     // add students who are does not exists
     result.Sheet1.forEach(function (studentList) {
@@ -479,6 +496,18 @@ const addTeacherUsingExcel = (req, res) => {
         },
         sheets: ['Sheet1']
     });
+
+    // delete file after reading
+    fs.unlink
+    (file
+        .path, function (err) {
+            if (err) {
+                console.log(err);
+                res.status(500).json({
+                    error: err
+                });
+            }
+        });
 
     // add students who are does not exists
     result.Sheet1.forEach(function (teacherList) {
