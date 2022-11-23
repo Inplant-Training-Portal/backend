@@ -48,6 +48,10 @@ const StudentSchema = new Schema({
     documents: {
         type: Array
     },
+    // MARKS
+    marks: {
+        type: String
+    },
     // LAST UPDATED
     date: {
         type: Date,
