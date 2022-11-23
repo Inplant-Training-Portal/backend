@@ -1,15 +1,12 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const upload = require('express-fileupload');
 const importExcel = require('convert-excel-to-json');
 
-// admin model
+// import models
 const Admin = require('../models/Admin.model');
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
 const File = require('../models/File.model');
-const Excel = require('../models/Excel.model');
 
 const secret = 'secretkey';
 
@@ -277,11 +274,6 @@ const addStudent = (req, res) => {
 // add student using excel sheet
 const addStudentUsingExcel = (req, res) => {
     const file = req.file;
-    const excelFileData = new Excel({
-        originalname: file.originalname,
-        path: file.path
-    });
-    excelFileData.save()
 
     // read excel file
     let result = importExcel({
@@ -471,11 +463,6 @@ const addTeacher = (req, res) => {
 // add teacher using excel sheet
 const addTeacherUsingExcel = (req, res) => {
     const file = req.file;
-    const excelFileData = new Excel({
-        originalname: file.originalname,
-        path: file.path
-    });
-    excelFileData.save()
 
     // read excel file
     let result = importExcel({
