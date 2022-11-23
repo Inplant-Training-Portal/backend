@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "inplant-training-portal-369403",
+  "private_key_id": "dec6828816c4a1aabef96321d5becd28c11c88c8",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCz81ooawXzzHlw\na/a6D8SjBi0cA/zuJ+I66HCAWbdgcTIrMtHOaSelxPE0iCSMFvowvUOPQKRAw7nE\nbVg57WRCy4RvnhtZSQvx2V2s2BAQuJ+fPdpWO2I2WFoIDzU2m7RrHECHLF6siBJv\nXH4SAnwl70iFBz0Cb+l5joH2I+/3mP7yB0LhhJSduowvYihhD3VuaxMxZAZBX71f\nN7AP+v+GbWxAG0xz+BduEXcecAM0lvtrbvp2516wTFEmpSC8MfE13pg2u7KRc0ap\njUHtTWHlnlGUavCciUrB7hIT//j/DRoUBfUk2UsJkFLY1L/hkFFb6HO1onvBFcvq\nNGwUvE2HAgMBAAECggEAO6i44cCFoyvNsRtiG5KBtyijiO+7ibt4Ud5g+fSEirlM\nkCzTiRKsvdUawLdIIpe1j7YXsWUVb5FUQ86amu3cuRZfDGBHIeVJS/+sAlNJlDmZ\nVgJ8Ie2jJHBLPPPJyRZ7DK27qPTpWFrufbQU6eSgAzWe/deF/wpaRd4csR19/8BO\nEI+GXjr3rMYWatC+lslma3ox1qoV+Tf9OAvLho7463s4CVR//NIzwf738MHIvFUH\nP68qndVenYGc3xGrmb3Gn4bLwUeob5oQW9zW+jKFXn8sZkpBNACEXUg+M0hRIuBX\nYTvWWcBpib4Xt6/GWpwb/iPvWK4RVZ28428hMDEbwQKBgQD5P33/XW1PPTGVxJPE\nR1THtlT0pvgfMjZSulL7CLffc6LnWiMem/F8E2zCC5UgxAjuWOEC6fzmnr8VSjJK\nIXgKPjiYFRts0RufvFN8vYb1QK5aXsRYswjGaLsUrB25lE+7QROVYEVfTewOcAOL\nLNd2BhoLgzIQ/nUt/SMYH4u+wQKBgQC400o5Lg11HDlY6BjqS3Bad36VV+TbqwS+\nsVjctP4HOZ43q66VQ991j1xSz/5ie4Pkzc/MDNkq1MUeZbfDRUtNpwjtZAU2/a5a\nRBaeoOuq30/yDiSTZX8TQiPThPfbgDCOnLXUaWEzU4mfPGXkZi0BaaMBzrV2Dqzp\nY8GqltnmRwKBgEA+OT+k2RPfdfRgYqXorNV9DZCxqKqByrawB8tkh+A0cfynov20\nvB169EFfsuRrItIsXnLd1K2spRvbr/Kjhck+GGA6sILvsusNI4e3Yh28ujPY0Ur7\nenuJaw78/fxjWdmuAFo0Ii1abEmcXY111WM6V2Q4QKNYsuNTp8QD/YUBAoGAFSx/\nkFVqTURSfZD5ab4CvRp7cfiDy3aoMIB4wbAqegFr0szkT01bSEiINySE7BtiXNAH\nQkUmi/WcL4NPrhs+KUM9jpSq1EXzt3uda8bbuNOkgQKFxi0WhcpJ+G1/R7JD3dKu\nMgtwi0TCu29b7PKXrVXAyvA3cbL0tDgtc7GcfPkCgYBS0cXic+3s2ylDhsvm9M81\nj8DOiPsYxczD1D/1JAvMNt4COK2OBhysr76eFp1tcuN86AyZ4xqXxSYrCSMRdyFv\nLrVHx8lnoEXfPJBGVx/RcWURzvtiMrFlSxNs8bOz10Xcob4alHC5916xztSqvFXk\n+H4yMdJNfc5WB2wNUkCipQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "inplant-training@inplant-training-portal-369403.iam.gserviceaccount.com",
+  "client_id": "110125538560909737034",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/inplant-training%40inplant-training-portal-369403.iam.gserviceaccount.com"
+}
