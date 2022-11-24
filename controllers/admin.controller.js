@@ -334,9 +334,6 @@ const addStudentUsingExcel = (req, res) => {
                             organization_mentor_email: studentList.organization_mentor_email
                         });
                         student.save()
-                            .then(function () {
-                            }
-                            )
                     });
                 }
             })
