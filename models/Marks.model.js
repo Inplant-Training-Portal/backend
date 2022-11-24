@@ -8,11 +8,22 @@ const MarksSchema = new Schema({
         type: String,
         required: true
     },
-    marks: {
-        type: Array
+    discipline: {
+        type: String,
+    },
+    attitude: {
+        type: String,
+    },
+    maintenance: {
+        type: String,
+    },
+    report: {
+        type: String,
+    },
+    achievement: {
+        type: String,
     }
 });
 
 // export teacher model
 module.exports = mongoose.model('Marks', MarksSchema);
-
