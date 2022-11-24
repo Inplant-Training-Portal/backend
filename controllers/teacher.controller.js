@@ -262,9 +262,10 @@ const updateTeacherProfile = async (req, res) => {
 
 // send mail
 const sendMail = (req, res) => {
+    // console.log(req.headers.origin);
     const { name, faculty_mentor_name, organization_mentor_email } = req.body;
     const query = `?name=${name}`
-    const link = 'http://localhost:5173/marks-assessment/' + query;
+    const link = `${req.headers.origin}/marks-assessment/${query}`
 
     // setup transporter
     const transporter = nodeMailer.createTransport({
