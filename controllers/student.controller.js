@@ -203,7 +203,7 @@ const uploadFile = (req, res) => {
                 const fileData = new File({
                     student_id: student._id,
                     name: originalname,
-                    url : `https://drive.google.com/file/d/${file.data.id}/view?usp=sharing`
+                    url : `https://drive.google.com/file/d/${file.data.id}`
                 });
                 fileData.save()
                 
@@ -236,11 +236,31 @@ const uploadFile = (req, res) => {
     });
 }
 
+// map file
+const mapFile = (req, res) => {
+    const id = req.params.id
+
+    // get students id from params and return all documents
+    File.find({ student_id: id })
+        .then(function (documents) {
+            res.status(200).json({
+                documents
+            });
+        }
+        )
+        .catch(function (err) {
+            res.status(500).json({
+                error: err
+            });
+        });
+}
+
 
 module.exports={
     loginStudent,
     updateStudentInfo,
     changeStudentPassword,
     getTeacherProfile,
-    uploadFile
+    uploadFile,
+    mapFile
 }
