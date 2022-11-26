@@ -22,6 +22,9 @@ router.get('/teacher/:id', studentController.getTeacherProfile);
 // upload document
 router.post("/file/upload/:id", upload.single('file'), studentController.uploadFile);
 
+// map document
+router.get("/file/map/:id", studentController.mapFile);
+
 
 // export router
 module.exports = router;
