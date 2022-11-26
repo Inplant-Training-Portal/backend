@@ -1,23 +1,17 @@
 const mongoose = require("mongoose")
 
 const File = new mongoose.Schema({
-    title:{
-        type:String
+    student_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student"
     },
-    owner:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Student"
-    },
-    path: {
-        type: String,
-        required: true
-    },
-    originalname: {
+    name: {
         type: String,
         required: true
     },
     url: {
-        type: String
+        type: String,
+        required: true
     }
 })
 
