@@ -2,8 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const File = require('../models/File.model');
-const Student = require('../models/Student.model');
 const upload = multer({ dest: 'uploads/' });
 
 // import student controller
@@ -22,47 +20,8 @@ router.post('/update/password/:id', studentController.changeStudentPassword);
 router.get('/teacher/:id', studentController.getTeacherProfile);
 
 // upload document
-// router.post('/file/upload',studentController.uploadFile);
+router.post("/file/upload/:id", upload.single('file'), studentController.uploadFile);
 
-// // download document
-// router.get('/uploads/:id',studentController.downloadFile);
-
-// upload document
-router.post("/file/upload/:id", upload.single('file'), async (req, res) => {
-    const {originalname, path} = req.file;
-    const fileData = new File({
-        title:req.body.title,
-        owner:req.params.id,
-        path: path,
-        originalname: originalname,
-        url:"http://localhost:9000/student/"+path
-    });
-
-    const file = await File.create(fileData);
-
-    Student.findById(req.params.id)
-    .then((student)=>{
-        student.documents.push(file._id);
-        student.save()
-
-        file.owner=student._id
-        file.save()
-    })
-
-    res.status(201).json({message:"File uploaded sucessfully",file});
-});
-
-// view all documents
-router.get('/uploads/:id',(req, res) =>{
-        File.findOne({path:`uploads/${req.params.id}`})
-        .then((file)=>{
-            if(file){
-                res.status(201).json({message:"downloading...",file}).download(`uploads/${req.params.id}`,file.originalname)
-            }else{
-                res.status(404).json({message:'File not found'});
-            }
-        })
-    });
 
 // export router
 module.exports = router;
