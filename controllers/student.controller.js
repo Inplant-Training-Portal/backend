@@ -1,10 +1,14 @@
+const { google } = require('googleapis');
+const keys = require('../inplant-training-portal-369403-dec6828816c4.json');
+const fs = require('fs');
+
 // import the student model
 const Student = require('../models/Student.model');
 const Teacher = require('../models/Teacher.model');
+const File = require('../models/File.model');
 
 // import packages
 const bcrypt = require('bcrypt');
-const multer = require('multer');
 
 // login
 const loginStudent = (req, res) => {
@@ -150,9 +154,93 @@ const getTeacherProfile = async (req, res) => {
     }
 }
 
+// upload file
+const uploadFile = (req, res) => {
+    const student_id = req.params.id;
+    const { originalname, mimeType, path } = req.file;
+
+    const client = new google.auth.JWT(
+        keys.client_email,
+        null,
+        keys.private_key,
+        ['https://www.googleapis.com/auth/drive']
+    );
+
+    client.authorize(function(err, tokens) {
+        if(err) {
+            console.log(err);
+            return;
+        }
+        else {
+            console.log('Connected to Drive API');
+            gdrun(client);
+        }
+    });
+
+    async function gdrun(cl) {
+        const gdapi = google.drive({ version: 'v3', auth: cl });
+
+        const fileMetadata = {
+            'name': originalname,
+            'parents': ['1F3GpRYV4cme9EGaXwV50grTnWfEhyM5M']
+        };
+
+        const media = {
+            mimeType: mimeType,
+            body: fs.createReadStream(path)
+        };
+
+        const file = await gdapi.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: 'id'
+        });
+
+        
+        Student.findById(student_id)
+        .then(function (student) {
+            if (student) {
+                const fileData = new File({
+                    student_id: student._id,
+                    name: originalname,
+                    url : `https://drive.google.com/file/d/${file.data.id}/view?usp=sharing`
+                });
+                fileData.save()
+                
+                student.documents.push(fileData._id);
+                student.save();
+                
+            }
+        })
+        
+        fs.unlink(path, (err) => {
+            if(err) {
+                console.log(err);
+            }
+            else {
+                console.log('File deleted');
+            }
+        });
+
+        res.status(200).json({
+            message: 'File uploaded successfully!'
+        });
+    }
+
+    // call the function
+    gdrun().then(() => {
+        console.log('File uploaded successfully.');
+    }
+    ).catch((err) => {
+        console.log(err);
+    });
+}
+
+
 module.exports={
     loginStudent,
     updateStudentInfo,
     changeStudentPassword,
-    getTeacherProfile
+    getTeacherProfile,
+    uploadFile
 }
