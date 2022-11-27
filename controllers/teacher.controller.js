@@ -545,7 +545,6 @@ const uploadFacultyMarks = (req, res) => {
 }
 
 
-
 module.exports={
     loginTeacher,
     updateTeacherInfo,
