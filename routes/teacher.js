@@ -47,6 +47,9 @@ router.post('/upload-industry-marks/:studentName', teacherController.uploadIndus
 // get and upload faculty marks
 router.post('/upload-faculty-marks/:studentName', teacherController.uploadFacultyMarks);
 
+// send bulk email
+router.post('/send-bulk-email', teacherController.sendBulkMail);
+
 
 // export router
 module.exports = router;
