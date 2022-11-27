@@ -49,8 +49,11 @@ const StudentSchema = new Schema({
         type: Array
     },
     // MARKS
-    marks: {
-        type: String
+    faculty_marks: {
+        type: Array
+    },
+    industry_marks: {
+        type: Array
     },
     // LAST UPDATED
     date: {
