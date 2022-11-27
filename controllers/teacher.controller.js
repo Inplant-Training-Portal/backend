@@ -264,7 +264,6 @@ const updateTeacherProfile = async (req, res) => {
 const sendMail = (req, res) => {
 
     const { name, faculty_mentor_name, organization_mentor_email } = req.body;
-    console.log(req.body);
     const query = `?name=${name}`
     const link = `${req.headers.origin}/ask-assessment/${query}`
 
@@ -294,7 +293,7 @@ const sendMail = (req, res) => {
         link
     };
 
-    console.log("Drafting mail");
+    console.log("Mail Drafted");
 
     // send mail
     transporter.sendMail(mailOptions, function (err, info) {
@@ -305,7 +304,7 @@ const sendMail = (req, res) => {
                 error: err
             });
         } else {
-            console.log(info);
+            console.log("Mail Sent " + info.response);
             res.status(200).json({
                 message: 'Mail sent successfully!'
             });
@@ -544,6 +543,70 @@ const uploadFacultyMarks = (req, res) => {
         });
 }
 
+// send bulk email
+const sendBulkMail = (req, res) => {
+
+    ifError = false;
+
+    // loop number of students
+    for (let i = 0; i < req.body.length; i++) {
+        const name = req.body[i][0];
+        const faculty_mentor_name = req.body[i][1];
+        const organization_mentor_email = req.body[i][2];
+
+        const query = `?name=${name}`
+        const link = `${req.headers.origin}/ask-assessment/${query}`
+
+        // setup transporter
+        const transporter = nodeMailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD
+            },
+            port: 587,
+            host: 'smtp.gmail.com',
+        });
+
+        console.log("Transporter is ready to send mail");
+
+        // setup email data
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: organization_mentor_email,
+            subject: "Ask for Marks Evaluation",
+            text: "Dear Sir/Madam, I am " + faculty_mentor_name + 
+            " from the Department of Computer Engineering, Government Polytechnic Mumbai. I would like to ask you to evaluate the marks of my student " + 
+            name + 
+            " . Google Form link for the same is attached below Thank you.\n\n" + 
+            link
+        };
+
+        console.log("Mail Drafted");
+
+        // send mail
+        transporter.sendMail(mailOptions, function (err, info) {
+            if (err) {
+                ifError = true;
+                console.log(err);
+            } else {
+                console.log("Mail Sent " + info.response);
+            }
+        });
+    }
+    if (ifError) {
+        res.status(500).json({
+            message: 'Oops, something went wrong!'
+        });
+    }
+    else {
+        res.status(200).json({
+            message: 'Mail sent successfully!'
+        });
+    }
+}
+
+
 
 module.exports={
     loginTeacher,
@@ -559,5 +622,6 @@ module.exports={
     sendMail,
     sendDetails,
     uploadIndustryMarks,
-    uploadFacultyMarks
+    uploadFacultyMarks,
+    sendBulkMail
 }
