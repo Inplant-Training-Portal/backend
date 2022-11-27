@@ -262,20 +262,25 @@ const updateTeacherProfile = async (req, res) => {
 
 // send mail
 const sendMail = (req, res) => {
-    // console.log(req.headers.origin);
+
     const { name, faculty_mentor_name, organization_mentor_email } = req.body;
+    console.log(req.body);
     const query = `?name=${name}`
     const link = `${req.headers.origin}/ask-assessment/${query}`
 
     // setup transporter
     const transporter = nodeMailer.createTransport({
-        service: 'hotmail',
+        service: 'gmail',
         auth: {
             // take from .env file
             user: process.env.EMAIL,
             pass: process.env.PASSWORD
-        }
+        },
+        port: 587,
+        host: 'smtp.gmail.com'
     });
+
+    console.log("Transporter is ready to send mail");
 
     // setup email data
     const mailOptions = {
@@ -289,6 +294,8 @@ const sendMail = (req, res) => {
         link
     };
 
+    console.log("Drafting mail");
+
     // send mail
     transporter.sendMail(mailOptions, function (err, info) {
         if (err) {
@@ -298,6 +305,7 @@ const sendMail = (req, res) => {
                 error: err
             });
         } else {
+            console.log(info);
             res.status(200).json({
                 message: 'Mail sent successfully!'
             });
