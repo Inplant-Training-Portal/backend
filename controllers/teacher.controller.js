@@ -265,7 +265,7 @@ const sendMail = (req, res) => {
     // console.log(req.headers.origin);
     const { name, faculty_mentor_name, organization_mentor_email } = req.body;
     const query = `?name=${name}`
-    const link = `${req.headers.origin}/marks-assessment/${query}`
+    const link = `${req.headers.origin}/ask-assessment/${query}`
 
     // setup transporter
     const transporter = nodeMailer.createTransport({
@@ -328,8 +328,8 @@ const sendDetails = (req, res) => {
         });
 }
 
-// get and upload details
-const getAndUploadDetails = (req, res) => {
+// get and upload industry marks
+const uploadIndustryMarks = (req, res) => {
     const studentName = req.params.studentName;
     const { discipline, attitude, maintenance, report, achievement } = req.body;
 
@@ -346,8 +346,8 @@ const getAndUploadDetails = (req, res) => {
             });
             marks.save()
 
-            // update student
-            student.marks = marks._id;
+            // push marks to student
+            student.industry_marks.push(marks._id);
             student.save()
 
             // save marks in excel file
@@ -396,7 +396,7 @@ const getAndUploadDetails = (req, res) => {
                 let excelFile = await wb.xlsx.readFile('./excel/marks.xlsx')
                 
                 // get data from Sheet1
-                let sheet = excelFile.getWorksheet('Sheet1');
+                let sheet = excelFile.getWorksheet('Industry_Marks');
                 let data = sheet.getSheetValues();
             
                 // discard 1 empty item from each row
@@ -411,7 +411,111 @@ const getAndUploadDetails = (req, res) => {
                 //update function
                 const update = {
                     spreadsheetId: '1DbOUPg4Glor3oZszDejcEc_gPmb9UZ72Kdpig6ykaLc',
-                    range: 'Sheet1!A1',
+                    range: 'Industry_Marks!A1',
+                    valueInputOption: 'USER_ENTERED',
+                    resource: { values: data }
+                };
+            
+                let res = await gsapi.spreadsheets.values.update(update);
+            }
+
+            res.status(200).json({
+                message: 'Marks uploaded successfully!'
+            });
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.status(500).json({
+                error: err,
+                message: 'Oops, something went wrong!'
+            });
+        });
+}
+
+// get and upload faculty marks
+const uploadFacultyMarks = (req, res) => {
+    const studentName = req.params.studentName;
+    const { discipline, attitude, maintenance, report, achievement } = req.body;
+
+    Student.findOne({name: studentName})
+        .then(function (student) {
+            // create marks
+            const marks = new Marks({
+                student: student._id,
+                discipline,
+                attitude,
+                maintenance,
+                report,
+                achievement
+            });
+            marks.save()
+
+            // update student
+            student.faculty_marks.push(marks._id);
+            student.save()
+
+            // save marks in excel file
+            const fileName = "./excel/marks.xlsx";
+            const workbook = new excelJS.Workbook();
+            
+            workbook.xlsx.readFile(fileName)
+            .then(() => {
+                const worksheet = workbook.getWorksheet(2);
+                const lastRow = worksheet.lastRow;
+                const getRowInsert = worksheet.getRow(++(lastRow.number));
+                getRowInsert.getCell(1).value = student.enrollment_no;
+                getRowInsert.getCell(2).value = studentName;
+                getRowInsert.getCell(3).value = discipline;
+                getRowInsert.getCell(4).value = attitude;
+                getRowInsert.getCell(5).value = maintenance;
+                getRowInsert.getCell(6).value = report;
+                getRowInsert.getCell(7).value = achievement;
+                getRowInsert.commit();
+                workbook.xlsx.writeFile(fileName);
+            });
+
+            // create client
+            const client = new google.auth.JWT(
+                keys.client_email,
+                null,
+                keys.private_key,
+                ['https://www.googleapis.com/auth/spreadsheets']
+            );
+
+            // authorize client
+            client.authorize(function(err, tokens) {
+                if (err) {
+                    console.log(err);
+                    return;
+                } else {
+                    console.log('Connected!');
+                    gsrun(client);
+                }
+            });
+
+            async function gsrun(cl) {
+                const gsapi = google.sheets({ version: 'v4', auth: cl });
+            
+                const wb = new excelJS.Workbook();
+                let excelFile = await wb.xlsx.readFile('./excel/marks.xlsx')
+                
+                // get data from Sheet1
+                let sheet = excelFile.getWorksheet('Faculty_Marks');
+                let data = sheet.getSheetValues();
+            
+                // discard 1 empty item from each row
+                data = data.map(function(r) {
+                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7]];
+                });
+            
+                // discard sheet 1 empty item
+                data.shift();
+                // console.log(data1);
+                
+                //update function
+                const update = {
+                    spreadsheetId: '1DbOUPg4Glor3oZszDejcEc_gPmb9UZ72Kdpig6ykaLc',
+                    range: 'Faculty_Marks!A1',
                     valueInputOption: 'USER_ENTERED',
                     resource: { values: data }
                 };
@@ -447,5 +551,6 @@ module.exports={
     updateTeacherProfile,
     sendMail,
     sendDetails,
-    getAndUploadDetails
+    uploadIndustryMarks,
+    uploadFacultyMarks
 }
