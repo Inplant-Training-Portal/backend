@@ -620,6 +620,7 @@ const allocateSingleStudent = async(req,res) => {
                 .then(function (student) {
                     // update student's teacher id
                     student.faculty_mentor = teacher._id;
+                    student.faculty_mentor_name = teacher.name;
                     student.faculty_mentor_email = teacher.email;
                     student.faculty_mentor_mobile_no = teacher.mobile_no;
                     student.save()
