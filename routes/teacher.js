@@ -41,8 +41,11 @@ router.post('/send-email', teacherController.sendMail);
 // send details
 router.get('/send-details/:studentName', teacherController.sendDetails);
 
-// get and upload details
-router.post('/upload-details/:studentName', teacherController.getAndUploadDetails);
+// get and upload industry marks
+router.post('/upload-industry-marks/:studentName', teacherController.uploadIndustryMarks);
+
+// get and upload faculty marks
+router.post('/upload-faculty-marks/:studentName', teacherController.uploadFacultyMarks);
 
 
 // export router
