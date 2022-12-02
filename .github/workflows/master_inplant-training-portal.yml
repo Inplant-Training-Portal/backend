@@ -32,6 +32,10 @@ jobs:
         with:
           name: node-app
           path: .
+      
+      - name: node start server
+        run: |
+          node index.js
 
   deploy:
     runs-on: ubuntu-latest
