@@ -6,9 +6,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const passport = require('passport')
+
 
 // create express app
 const app = express();
+
+// initialize passport
+app.use(passport.initialize())
 
 // port number
 const port = process.env.PORT || 9000;
@@ -16,14 +21,16 @@ const port = process.env.PORT || 9000;
 // use cors middleware
 app.use(cors());
 
-// use body-parser middleware
-app.use(bodyParser.json());
 // express static files
 app.use(express.static('public'));
+
+// use body-parser middleware
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
+
 // connect to mongodb
-const mongouri =  "mongodb+srv://sample:sample@inplant-training.ohnrlch.mongodb.net/?retryWrites=true&w=majority"
+const mongouri =  `mongodb+srv://admin:${process.env.ATLAS_PASSWORD}@backend.l4ofsei.mongodb.net/?retryWrites=true&w=majority`
 mongoose.connect(mongouri, { useNewUrlParser: true });
 const connection = mongoose.connection;
 
@@ -32,10 +39,11 @@ connection.once('open', function() {
     }
 );
 
+
 // import routes
-const adminRoutes = require('./routes/admin');
-const studentRoutes = require('./routes/student');
-const teacherRoutes = require('./routes/teacher');
+const adminRoutes = require('./routes/admin.routes');
+const studentRoutes = require('./routes/student.routes');
+const teacherRoutes = require('./routes/teacher.routes');
 
 // use routes
 app.use('/student', studentRoutes);
