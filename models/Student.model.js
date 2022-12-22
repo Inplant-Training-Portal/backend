@@ -26,26 +26,15 @@ const StudentSchema = new Schema({
     },
     // FACULTY MENTOR DETAILS
     faculty_mentor: {
-        type: String
-    },
-    faculty_mentor_name: {
-        type: String
-    },
-    faculty_mentor_email: {
-        type: String
-    },
-    faculty_mentor_mobile_no: {
-        type: String
+        name: String,
+        email: String,
+        mobile_no: Number
     },
     // ORGANIZATION MENTOR DETAILS
-    organization_name: {
-        type: String
-    },
-    organization_mentor_name: {
-        type: String
-    },
-    organization_mentor_email: {
-        type: String
+    organization_mentor: {
+        name: String,
+        mentor_name: String,
+        mentor_email: String
     },
     // DOCUMENTS
     documents: {
