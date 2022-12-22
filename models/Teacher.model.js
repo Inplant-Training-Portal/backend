@@ -19,10 +19,12 @@ const TeacherSchema = new Schema({
     },
     // TEACHER CONTACT DETAILS
     email: {
-        type: String
+        type: String,
+        required: true
     },
     mobile_no: {
-        type: String
+        type: Number,
+        required: true
     },
     // STUDENTS ALLOCATED
     students: {
