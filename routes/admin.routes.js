@@ -29,11 +29,8 @@ router.post('/update/password', passport.authenticate('jwt', { session: false })
 // get admin by id
 // router.get('/info/:id', adminController.getAdminById);
 
-// get students documents
-router.get('/students/:id/documents', adminController.getStudentDocuments);
-
 // get all admins
-router.get('/list', adminController.getAllAdmins);
+// router.get('/list', adminController.getAllAdmins);
 
 // add student
 router.post('/add-student', passport.authenticate('jwt', { session: false }), adminController.addStudent);
@@ -64,12 +61,6 @@ router.get('/teacher-info/:id', passport.authenticate('jwt', { session: false })
 
 // get teachers list
 router.get('/teachers/list', passport.authenticate('jwt', { session: false }), adminController.getTeachersList);
-
-// allocate single student
-// router.post('/allocate-single-student/:teacherName/:studentId',adminController.allocateSingleStudent);
-
-// deallocate single student 
-// router.post('/deallocate-single-student',adminController.deallocateSingleStudent);
 
 // allocate student
 router.post('/allocate-student/:teacherName', passport.authenticate('jwt', { session: false }), adminController.allocateStudents);
