@@ -20,9 +20,11 @@ const StudentSchema = new Schema({
     // STUDENT CONTACT DETAILS
     email: {
         type: String,
+        required: true
     },
     mobile_no: {
-        type: String,
+        type: Number,
+        required: true
     },
     // FACULTY MENTOR DETAILS
     faculty_mentor: {
