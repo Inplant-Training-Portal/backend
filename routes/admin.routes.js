@@ -11,9 +11,6 @@ require('../auth/admin.auth')(passport)
 // import admin controller
 const adminController = require('../controllers/admin.controller.js');
 
-// test route
-router.get('/test', adminController.test);
-
 // register admin
 router.post('/register', adminController.registerAdmin);
 
