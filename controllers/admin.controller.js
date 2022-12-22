@@ -1,7 +1,10 @@
+// import env variables
+require('dotenv').config()
+
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const importExcel = require('convert-excel-to-json');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 
 
 // import models
@@ -10,7 +13,7 @@ const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
 const File = require('../models/File.model');
 
-const secret = 'secretkey';
+const saltRounds = 12
 
 // test route
 const test = (req, res) => {
@@ -20,88 +23,101 @@ const test = (req, res) => {
 // Admin Functions
 
 // register admin
-const registerAdmin = (req, res) => {
-    const { name, username, password, email, mobile_no } = req.body;
-
-    // check if admin already exists
-    Admin.findOne({ username: username })
-        .then(function (adminData) {
-            if (adminData) {
-                res.status(400).json({ message: 'Admin already exists' });
-            } else {
-                // encrypt password
-                bcrypt.hash(password, 10, function (err, hash) {
-                    if (err) {
-                        res.json({
-                            error: err
-                        })
-                    }
-                    const admin = new Admin({
-                        name,
-                        username,
-                        password: hash,
-                        email,
-                        mobile_no
-                    });
-                    admin.save()
-                        .then(function (result) {
-                            res.status(201).json({
-                                message: 'Admin created successfully!',
-                                result
-                            });
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({
-                                error: err
-                            });
-                        });
-                });
-            }
+const registerAdmin = async (req, res) => {
+    
+    try {
+        const { name, username, password, email, mobile_no } = req.body;
+        let admin = await Admin.findOne({ username: username })
+        if(!admin) {
+            // encrypt password
+            bcrypt.hash(password, saltRounds, async function(err, hashedPassword) {
+                if(err) {
+                    res.status(500).json({
+                        error: err,
+                        message: "Something went wrong"
+                    })
+                }
+                let newAdmin = await Admin.create({
+                    name: name,
+                    username: username,
+                    password: hashedPassword,
+                    email: email,
+                    mobile_no: mobile_no
+                })
+                
+                res.status(201).json({
+                    message: "Admin created successfully"
+                })
+            })
+        }
+        else {
+            res.status(400).json({
+                message: "Admin already exists"
+            })
+        }
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json({
+            error: err
         })
+    }
 }
 
 // login admin
-const loginAdmin = (req, res) => {
-    const { username, password } = req.body;
-    Admin.findOne({ username }, function (err, admin) {
-        if (err) {
-            res.status(500).json({
-                error: err
-            });
+const loginAdmin = async (req, res) => {
+    
+    try {
+        const { username, password } = req.body;
+        let admin = await Admin.findOne({ username: username })
+        if(!admin) {
+            res.status(404).json({
+                message: "Oops, No Admin Found!"
+            })
         }
-        if (admin) {
-            // compare password
-            bcrypt.compare(password, admin.password, function (err, result) {
-                if (err) {
-                    res.status(401).json({
-                        message: 'Login failed! Please try again.'
-                    });
+        else {
+            // compare passport
+            bcrypt.compare(password, admin.password, function(err, result) {
+                if(err) {
+                    res.status(500).json({
+                        message: "Something went wrong"
+                    })
                 }
-                if (result) {
-                    // generate token
-                    let token = jwt.sign({ username: admin._id }, secret, { expiresIn: '1h' });
-                    res.status(200).json({
-                        message: 'Login successful!',
-                        token,
-                        user: admin
-                    });
+                if(result) {
+                    const payload = { id: admin._id, username: admin.username, name: admin.name, email: admin.email, mobile_no: admin.mobile_no }
+
+                    jwt.sign(
+                        payload,
+                        process.env.SECRETORKEY,
+                        { expiresIn: '1h' },
+                        (err, token) => {
+                            res.status(202).json({
+                                message: "Login Successful!",
+                                token: "Bearer " + token,
+                                user: payload
+                            })
+                        }
+                    )
                 }
                 else {
                     res.status(401).json({
-                        message: 'Password does not match!'
-                    });
+                        message: "Incorrect Credentials"
+                    })
                 }
-            });
-        } else {
-            res.status(401).json({
-                message: 'Oops, Admin not found!'
-            });
+            })
         }
-    });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
+        })
+    }
 }
 
 // get admin by id
-const getAdminById = (req, res) => {
+const getAdminById = async (req, res) => {
     const id = req.params.id;
     Admin.findById(id)
         .then(function (admin) {
@@ -134,99 +150,82 @@ const getAllAdmins = (req, res) => {
     });
 }
 
-const updateAdminInfo = (req, res) => {
-    const id = req.params.id;
+const updateAdminInfo = async (req, res) => {
+    
+    try {
+        const id = req.user.id;
+        let newInfo = {};
 
-    let newInfo = {};
+        if(req.body.email) {
+            newInfo.email = req.body.email;
+        }
 
-    if (req.body.email) {
-        newInfo.email = req.body.email;
+        if(req.body.mobile_no) {
+            newInfo.mobile_no = req.body.mobile_no
+        }
 
-    }
+        await Admin.findByIdAndUpdate(id, newInfo, { new: true })
 
-    if (req.body.mobile_no) {
-        newInfo.mobile_no = req.body.mobile_no;
-    }
-
-    Admin.findByIdAndUpdate(id, newInfo, { new: true })
-        .then(function (result) {
-            res.status(200).json({
-                message: 'Info updated successfully!',
-                result
-            });
+        res.status(200).json({
+            message: "Info update successfully!"
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
+        })
+    }
 }
 
 // change password
-const changeAdminPassword = (req, res) => {
-    const id = req.params.id;
-    const { oldPassword, newPassword, confirmPassword } = req.body;
-
-    // check if old password is correct
-    if (oldPassword) {
-        Admin.findById(id)
-            .then(function (admin) {
-                if (admin) {
-                    // compare password
-                    bcrypt.compare(oldPassword, admin.password, function (err, result) {
-                        if (err) {
-                            res.status(401).json({
-                                message: 'Login failed! Please try again.'
-                            });
+const changeAdminPassword = async (req, res) => {
+    
+    try {
+        const id = req.user.id;
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+        let admin = await Admin.findById(id)
+        bcrypt.compare(oldPassword, admin.password, function (err, result) {
+            if(err) {
+                res.status(401).json({
+                    message: "Something went wrong"
+                })
+            }
+            if(result) {
+                if(newPassword === confirmPassword) {
+                    // encrypt password
+                    bcrypt.hash(newPassword, saltRounds, function(err, hashedPassword) {
+                        if(err) {
+                            res.status(500).json({
+                                message: "Something went wrong"
+                            })
                         }
-                        if (result) {
-                            // check if new password and confirm password match
-                            if (newPassword === confirmPassword) {
-                                // encrypt password
-                                bcrypt.hash(newPassword, 10, function (err, hash) {
-                                    if (err) {
-                                        res.json({
-                                            error: err
-                                        })
-                                    }
-                                    Admin.findByIdAndUpdate(id, { password: hash }, { new: true })
-                                        .then(function (result) {
-                                            res.status(200).json({
-                                                message: 'Password updated successfully!',
-                                                result
-                                            });
-                                        })
-                                        .catch(function (err) {
-                                            res.status(500).json({
-                                                error: err
-                                            });
-                                        });
-                                });
-                            } else {
-                                res.status(401).json({
-                                    message: 'New password and Confirm password do not match!'
-                                });
-                            }
+                        if(result) {
+                            admin.password = hashedPassword
+                            admin.save()
+                            res.status(202).json({
+                                password: admin.password,
+                                message: "Password changed successfully"
+                            })
                         }
-                        else {
-                            res.status(401).json({
-                                message: 'Old password does not match!'
-                            });
-                        }
-                    });
-                } else {
-                    res.status(401).json({
-                        message: 'Oops, Admin not found!'
-                    });
+                    })
+                }
+                else {
+                    res.status(400).json({
+                        message: "New password and Confirm password do not match!"
+                    })
                 }
             }
-            )
-            .catch(function (err) {
-                res.status(500).json({
-                    error: err
-                });
-            }
-            );
+        })
+
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
+        })
     }
 }
 
@@ -234,151 +233,132 @@ const changeAdminPassword = (req, res) => {
 // Student Functions
 
 // add student
-const addStudent = (req, res) => {
-    const { name, enrollment_no, password } = req.body;
+const addStudent = async (req, res) => {
+    
+    try {
+        const { name, enrollment_no, password } = req.body;
+        let student = await Student.findOne({ enrollment_no: enrollment_no })
+        if(student) {
+            res.status(400).json({
+                message: "Student already exists with same Enrollment No"
+            })
+        }
+        else {
+            bcrypt.hash(password, saltRounds, async function(err, hashedPassword) {
+                const newStudent = await Student.create({
+                    name: name,
+                    enrollment_no: enrollment_no,
+                    password: hashedPassword
+                })
 
-    // check if student already exists
-    Student.findOne({ enrollment_no: enrollment_no })
-        .then(function (studentData) {
-            if (studentData) {
-                res.status(400).json({ message: 'Student already exists with same ENROLLMENT NO' });
-            } else {
-                // encrypt password
-                bcrypt.hash(password, 10, function (err, hash) {
-                    if (err) {
-                        res.json({
-                            error: err
-                        })
-                    }
-                    const student = new Student({
-                        name,
-                        enrollment_no,
-                        password: hash
-                    });
-                    student.save()
-                        .then(function (result) {
-                            res.status(201).json({
-                                message: 'Student created successfully!',
-                                result
-                            });
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({
-                                error: err
-                            });
-                            console.log(err);
-                        });
-                });
-            }
+                res.status(201).json({
+                    message: "Student created successfully!"
+                })
+            })
+        }
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
         })
+    }
 }
 
 // add student using excel sheet
-const addStudentUsingExcel = (req, res) => {
-    const file = req.file;
-    const path = file.path;
-    console.log(path);
+const addStudentUsingExcel = async (req, res) => {
 
-    // read excel file
-    let result = importExcel({
-        sourceFile: file.path,
-        header: {
-            rows: 1
-        },
-        columnToKey: {
-            A: 'name',
-            B: 'enrollment_no',
-            C: 'password',
-            D: 'email',
-            E: 'mobile_no',
-            F: 'organization_name',
-            G: 'organization_mentor_name',
-            H: 'organization_mentor_email'
-        },
-        sheets: ['Sheet1']
-    });
+    try {
+        const file = req.file;
+        const path = file.path;
 
-    // delete file after reading
-    fs.unlink
-        (file
-            .path, function (err) {
-                if (err) {
-                    console.log(err);
-                    res.status(500).json({
-                        error: err
+        let data = importExcel({
+            sourceFile: file.path,
+            header: {
+                rows: 1
+            },
+            columnToKey: {
+                A: "name",
+                B: "enrollment_no",
+                C: "password",
+                D: "email",
+                E: "mobile_no",
+                F: "organization_name",
+                G: "organization_mentor_name",
+                H: "organization_mentor_email"
+            },
+            sheets: ["Sheet1"]
+        });
+
+        fs.unlink(path, function(err) {
+            if (err) {
+                console.log(err);
+                res.status(500).json({
+                    error: err
+                });
+            }
+        });
+
+        data.Sheet1.forEach(async function(studentData) {
+            let student = await Student.findOne({ enrollment_no: studentData.enrollment_no })
+            if(!student) {
+                bcrypt.hash(studentData.password, saltRounds, async function(err, hashedPassword) {
+                    const newStudent = await Student.create({
+                        name: studentData.name,
+                        enrollment_no: studentData.enrollment_no,
+                        password: hashedPassword,
+                        email: studentData.email,
+                        mobile_no: studentData.mobile_no,
+                        organization_name: studentData.organization_name,
+                        organization_mentor_name: studentData.organization_mentor_name,
+                        organization_mentor_email: studentData.organization_mentor_email
                     });
-                }
-            });
+                });
+            }
+        });
 
+        res.status(201).json({
+            message: "Student added successfully"
+        });
 
-    // add students who are does not exists
-    result.Sheet1.forEach(function (studentList) {
-        Student.findOne({ enrollment_no: studentList.enrollment_no })
-            .then(function (studentData) {
-                if(studentData == null){
-                    // encrypt password
-                    bcrypt.hash(studentList.password, 10, function (err, hash) {
-                        if (err) {
-                            res.json({
-                                error: err
-                            })
-                        }
-                        const student = new Student({
-                            name: studentList.name,
-                            enrollment_no: studentList.enrollment_no,
-                            password: hash,
-                            email: studentList.email,
-                            mobile_no: studentList.mobile_no,
-                            organization_name: studentList.organization_name,
-                            organization_mentor_name: studentList.organization_mentor_name,
-                            organization_mentor_email: studentList.organization_mentor_email
-                        });
-                        student.save()
-                    });
-                }
-            })
-    });
-    res.status(201).json({
-        message: "Students added successfully!"
-    });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
+        })
+    }
 }
 
 // delete student
-const deleteStudent = (req, res) => {
+const deleteStudent = async (req, res) => {
 
-    const { enrollment_no } = req.body;
+    try {
+        const { enrollment_no } = req.body;
 
-    Student.findOne({ enrollment_no: enrollment_no })
-        .then((student) => {
-            if (!student) {
-                res.status(404).json({message : 'Student not found'});
-            } else {
-                Student.findByIdAndDelete(student._id)
-                    // check if student exists
-                    .then(function (student) {
-                        if (!student) {
-                            res.status(404).json({
-                                message: 'Student not exist!'
-                            });
-                        }
-                        res.status(200).json({
-                            message: 'Student deleted successfully!'
-                        });
-                    }
-                    )
-                    .catch(function (err) {
-                        res.status(500).json({
-                            error: err
-                        });
-                    }
-                    );
-            }
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
+        let student = await Student.findOne({ enrollment_no: enrollment_no })
+        if(!student) {
+            res.status(404).json({
+                message: "Student not found"
             });
-        });
+        }
+        else {
+            await Student.findByIdAndDelete(student._id)
+            res.status(200).json({
+                message: "Student deleted successfully"
+            })
+        }
+
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
+        })
+    }
 }
 
 // get student's documents
@@ -402,102 +382,109 @@ const getStudentDocuments = (req, res) => {
 }
 
 // get student's details
-const getStudentDetails = (req, res) => {
-    const id = req.params.id;
-    Student.findById(id)
-        .then(function (student) {
-            res.status(200).json({
-                student
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
+const getStudentDetails = async (req, res) => {
+
+    try {
+        const id = req.params.id;
+        let student = await Student.findById(id)
+
+        res.status(200).json({
+            student: {
+                name: student.name,
+                enrollment_no: student.enrollment_no,
+                email: student.email,
+                mobile_no: student.mobile_no,
+                organization_name: student.organization_name,
+                organization_mentor_name: student.organization_mentor_name,
+                organization_mentor_email: student.organization_mentor_email
+            }
         });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
 }
 
 // get students list
-const getStudentsList = (req, res) => {
-    Student.find({}, function (err, students) {
-        if (err) {
-            res.status(500).json({
-                message: 'Oops, something went wrong!',
-                error: err
-            });
-        }
+const getStudentsList = async (req, res) => {
+
+    try {
+        let students = await Student.find({}, { password: 0 })
+
         res.status(200).json({
             students
-        });
+        })
     }
-    );
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
 }
+
 
 // Teacher Functions
-const addTeacher = (req, res) => {
-    const { name, username, password } = req.body;
 
-    // check if teacher already exists
-    Teacher.findOne({ username: username })
-        .then(function (teacherData) {
-            if (teacherData) {
-                res.status(400).json({ message: 'Teacher already exists with same USERNAME' });
-            } else {
-                // encrypt password
-                bcrypt.hash(password, 10, function (err, hash) {
-                    if (err) {
-                        res.json({
-                            error: err
-                        })
-                    }
-                    const teacher = new Teacher({
-                        name,
-                        username,
-                        password: hash
-                    });
-                    teacher.save()
-                        .then(function (result) {
-                            res.status(201).json({
-                                message: 'Teacher created successfully!',
-                                result
-                            });
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({
-                                error: err
-                            });
-                            console.log(err);
-                        });
-                });
-            }
+// add teacher
+const addTeacher = async (req, res) => {
+    
+    try {
+        const { name, username, password } = req.body;
+        let teacher = await Teacher.findOne({ username: username })
+        if(teacher) {
+            res.status(400).json({
+                message: "Teacher already exists with same Username"
+            })
+        }
+        else {
+            bcrypt.hash(password, saltRounds, async function(err, hashedPassword) {
+                const newTeacher = await Teacher.create({
+                    name: name,
+                    username: username,
+                    password: hashedPassword
+                })
+
+                res.status(201).json({
+                    message: "Teacher created successfully!"
+                })
+            })
+        }
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
         })
+    }
 }
 
-
 // add teacher using excel sheet
-const addTeacherUsingExcel = (req, res) => {
-    const file = req.file;
+const addTeacherUsingExcel = async (req, res) => {
 
-    // read excel file
-    let result = importExcel({
-        sourceFile: file.path,
-        header: {
-            rows: 1
-        },
-        columnToKey: {
-            A: 'name',
-            B: 'username',
-            C: 'password',
-            D: 'email',
-            E: 'mobile_no'
-        },
-        sheets: ['Sheet1']
-    });
+    try {
+        const file = req.file;
+        const path = file.path;
 
-    // delete file after reading
-    fs.unlink
-    (file
-        .path, function (err) {
+        let data = importExcel({
+            sourceFile: file.path,
+            header: {
+                rows: 1
+            },
+            columnToKey: {
+                A: "name",
+                B: "username",
+                C: "password",
+                D: "email",
+                E: "mobile_no"
+            },
+            sheets: ["Sheet1"]
+        });
+
+        fs.unlink(path, function(err) {
             if (err) {
                 console.log(err);
                 res.status(500).json({
@@ -505,356 +492,307 @@ const addTeacherUsingExcel = (req, res) => {
                 });
             }
         });
+        console.log(data);
 
-    // add students who are does not exists
-    result.Sheet1.forEach(function (teacherList) {
-        Teacher.findOne({ username: teacherList.username })
-            .then(function (teacherData) {
-                if(teacherData == null){
-                    // encrypt password
-                    bcrypt.hash(teacherList.password, 10, function (err, hash) {
-                        if (err) {
-                            res.json({
-                                error: err
-                            })
-                        }
-                        const teacher = new Teacher({
-                            name: teacherList.name,
-                            username: teacherList.username,
-                            password: hash,
-                            email: teacherList.email,
-                            mobile_no: teacherList.mobile_no
-                        });
-                        teacher.save()
+        data.Sheet1.forEach(async function(teacherData) {
+            let teacher = await Teacher.findOne({ username: teacherData.username })
+            if(!teacher) {
+                bcrypt.hash(teacherData.password, saltRounds, async function(err, hashedPassword) {
+                    const newTeacher = await Teacher.create({
+                        name: teacherData.name,
+                        username: teacherData.username,
+                        password: hashedPassword,
+                        email: teacherData.email,
+                        mobile_no: teacherData.mobile_no
                     });
-                }
-            })
-    });
-    res.status(201).json({
-        message: "Teachers added successfully!"
-    });
-}
-
-
-// delete teacher
-const deleteTeacher = (req, res) => {
-
-    const { username } = req.body;
-
-    Teacher.findOne({ username: username })
-        .then((teacher) => {
-            if (!teacher) {
-                res.status(404).json({message : 'Teacher not found'});
-            } else {
-                Teacher.findByIdAndDelete(teacher._id)
-                    // check if student exists
-                    .then(function (teacher) {
-                        if (!teacher) {
-                            res.status(404).json({
-                                message: 'Teacher not exist!'
-                            });
-                        }
-                        res.status(200).json({
-                            message: 'Teacher deleted successfully!'
-                        });
-                    }
-                    )
-                    .catch(function (err) {
-                        res.status(500).json({
-                            error: err
-                        });
-                    }
-                    );
+                });
             }
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
         });
+
+        res.status(201).json({
+            message: "Teacher added successfully"
+        });
+
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
 }
 
-// get teacher's details
-const getTeacherDetails = (req, res) => {
-    const id = req.params.id;
-    Teacher.findById(id)
-        .then(function (teacher) {
+// delete student
+const deleteTeacher = async (req, res) => {
+
+    try {
+        const { username } = req.body;
+
+        let teacher = await Teacher.findOne({ username: username })
+        if(!teacher) {
+            res.status(404).json({
+                message: "Teacher not found"
+            });
+        }
+        else {
+            await Teacher.findByIdAndDelete(teacher._id)
             res.status(200).json({
-                teacher
-            });
+                message: "Teacher deleted successfully"
+            })
+        }
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
+    }
 }
 
-// get teachers list
-const getTeachersList = (req, res) => {
-    Teacher.find()
-        .then(function (teachers) {
-            res.status(200).json({
-                teachers
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
+// get student's details
+const getTeacherDetails = async (req, res) => {
+
+    try {
+        const id = req.params.id;
+        let teacher = await Teacher.findById(id)
+
+        res.status(200).json({
+            teacher: {
+                name: teacher.name,
+                enrollment_no: teacher.username,
+                email: teacher.email,
+                mobile_no: teacher.mobile_no
+            }
         });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
 }
+
+// get students list
+const getTeachersList = async (req, res) => {
+
+    try {
+        let teachers = await Teacher.find({}, { password: 0 })
+
+        res.status(200).json({
+            teachers
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
+
 
 // Allocate Functions
 
-// allocate single student
-const allocateSingleStudent = async(req,res) => {
-    // get student id and teacher name from params
-    const studentId = req.params.studentId;
-    const teacherName = req.params.teacherName;
-    // find teacher by name
-    Teacher.findOne({ username: teacherName })
-        .then(function (teacher) {          
-            // find student by id
-            Student.findById(studentId)
-                .then(function (student) {
-                    // update student's teacher id
-                    student.faculty_mentor = teacher._id;
-                    student.faculty_mentor_name = teacher.name;
-                    student.faculty_mentor_email = teacher.email;
-                    student.faculty_mentor_mobile_no = teacher.mobile_no;
-                    student.save()
-                    // push student's id to teacher's students array
-                    teacher.students.push(student._id);
-                    teacher.save()
-                    
-                    .then(function (result) {
-                        res.status(200).json({
-                            message: 'Mentor allocated successfully!',
-                            result
-                        });
-                    })
-                    .catch(function (err) {
-                        res.status(500).json({
-                            message:"Error in saving data to DB",
-                            error: err
-                        });
-                    });
-                })
+// allocate students
+const allocateStudents = async (req, res) => {
+
+    try {
+        const teacherName = req.params.teacherName
+        const students = req.body
+
+        let teacher = await Teacher.findOne({ name: teacherName })
+
+        for (let i = 0; i < students.length; i++) {
+            let student = await Student.findById(students[i])
+            student.faculty_mentor.name = teacher.name
+            student.faculty_mentor.email = teacher.email
+            student.faculty_mentor.mobile_no = teacher.mobile_no
+            student.save()
+
+            teacher.students.push(student._id)
+        }
+        teacher.save()
+        
+        res.status(202).json({
+            message: "Mentor allocated successfully"
         })
-        .catch(function (err) {
-            res.status(500).json({
-                message:"data not found",
-                error: err
-            });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
         })
+    }
 }
 
-// deallocate single student
-const deallocateSingleStudent = (req,res) => {
-    // get student id and teacher name from params
-    const studentId = req.params.studentId;
-    const teacherName = req.params.teacherName;
-    // find teacher by name
-    Teacher.findOne({ username: teacherName })
-        .then(function (teacher) {          
-            // find student by id
-            Student.findById(studentId)
-                .then(function (student) {
-                 
-                        // update student's teacher id
-                        student.mentor = "";
-                        student.save()
-                        // push student's id to teacher's students array
-                        teacher.students.pop(student._id);
-                        teacher.save()
-                        
-                        .then(function (result) {
-                            res.status(200).json({
-                                message: 'Mentor deallocated successfully!',
-                                result
-                            });
-                        })
-                        .catch(function (err) {
-                            res.status(500).json({
-                                message:"Error in saving data to DB",
-                                error: err
-                            });
-                        });
-                    
+// unallocate students
+const unallocateStudents = async (req, res) => {
 
-                })
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                message:"data not found",
-                error: err
-            });
-        })
-}
+    try {
+        const teacherName = req.params.teacherName
+        const students = req.body
 
-// allocate student's id to teacher
-const allocateStudent = (req, res) => {
-    // get student id and teacher name from params
-    const studentId = req.params.studentId;
-    const teacherName = req.params.teacherName;
-    // find teacher by name
-    Teacher.findOne({ name: teacherName })
-        .then(function (teacher) {
-            // find student by id
-            Student.findById(studentId)
-                .then(function (student) {
-                    // update student's teacher id
-                    student.mentor = teacher._id;
-                    student.save()
-                    // push student's id to teacher's students array
-                    teacher.students.push(student._id);
-                    teacher.save()
-                    
-                    .then(function (result) {
-                        res.status(200).json({
-                            message: 'Mentor allocated successfully!',
-                            result
-                        });
-                    })
-                    .catch(function (err) {
-                        res.status(500).json({
-                            error: err
-                        });
-                        res.send(err);
-                    });
-                })
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        })
-}
+        let teacher = await Teacher.findOne({ name: teacherName })
 
-// unallocate student's id from teacher
-const unallocateStudent = (req, res) => {
-    // get student id and teacher name from params
-    const studentId = req.params.studentId;
-    const teacherName = req.params.teacherName;
-    // find teacher by name
-    Teacher.findOne({ name: teacherName })
-        .then(function (teacher) {
-            // find student by id
-            Student.findById(studentId)
-                .then(function (student) {
-                    // update student's teacher id
-                    student.faculty_mentor = null;
-                    student.save()
-                    // remove student's id from teacher's students array
-                    teacher.students.pull(student._id);
-                    teacher.save()
+        for (let i = 0; i < students.length; i++) {
+            // let student = await Student.findById(students[i])
+            // student.faculty_mentor = null
+            // student.save()
+            await Student.findByIdAndUpdate(students[i], { $unset: { faculty_mentor: "" } })
 
-                    .then(function (result) {
-                        res.status(200).json({
-                            message: 'Mentor unallocated successfully!',
-                            result
-                        });
-                    })
-                    .catch(function (err) {
-                        res.status(500).json({
-                            error: err
-                        });
-                        res.send(err);
-                    });
-                })
+            teacher.students.pop(students[i])
+        }
+        teacher.save()
+        
+        res.status(202).json({
+            message: "Mentor unallocated successfully"
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
+
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
         })
+    }
 }
 
 // get allowcated students list
-const getAllocatedStudentsList = (req, res) => {
-    Student.find({ faculty_mentor: { $ne: null } })
-        .then(function (students) {
-            res.status(200).json({
-                students
-            });
+const getAllocatedStudentsList = async (req, res) => {
+
+    try {
+        let students = await Student.find({ faculty_mentor: { $ne: null } }, { password: 0 })
+
+        res.status(200).json({
+            students
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
 }
 
 // get unallocated students list
-const getUnallocatedStudentsList = (req, res) => {
-    Student.find({ faculty_mentor: null })
-        .then(function (students) {
-            res.status(200).json({
-                students
-            });
+const getUnallocatedStudentsList = async (req, res) => {
+
+    try {
+        let students = await Student.find({ faculty_mentor: null }, { password: 0 })
+
+        res.status(200).json({
+            students
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
 }
 
 // get allocated teachers list
-const getAllocatedTeachersList = (req, res) => {
-    Teacher.find({ students: { $ne: null } })
-        .then(function (teachers) {
-            res.status(200).json({
-                teachers
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
+// const getAllocatedTeachersList = async (req, res) => {
+
+//     try {
+//         let teachers = await Teacher.find({ students: { $ne: null } }, { password: 0 })
+
+//         res.status(200).json({
+//             teachers
+//         })
+//     }
+//     catch(err) {
+//         console.log(err);
+//         res.status(500).json({
+//             message: "Something went wrong"
+//         })
+//     }
+//     // Teacher.find({ students: { $ne: null } })
+//     //     .then(function (teachers) {
+//     //         res.status(200).json({
+//     //             teachers
+//     //         });
+//     //     })
+//     //     .catch(function (err) {
+//     //         res.status(500).json({
+//     //             error: err
+//     //         });
+//     //     });
+// }
 
 
 // get unallocated teachers list
-const getUnallocatedTeachersList = (req, res) => {
-    Teacher.find({ students: null })
-        .then(function (teachers) {
-            res.status(200).json({
-                teachers
-            });
-        })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
+// const getUnallocatedTeachersList = async (req, res) => {
+
+//     try {
+//         let teachers = await Teacher.find({ students: null }, { password: 0 })
+
+//         res.status(200).json({
+//             teachers
+//         })
+//     }
+//     catch(err) {
+//         console.log(err);
+//         res.status(500).json({
+//             message: "Something went wrong"
+//         })
+//     }
+//     // Teacher.find({ students: null })
+//     //     .then(function (teachers) {
+//     //         res.status(200).json({
+//     //             teachers
+//     //         });
+//     //     })
+//     //     .catch(function (err) {
+//     //         res.status(500).json({
+//     //             error: err
+//     //         });
+//     //     });
+// }
 
 
 // get allocated students list by teacher name
-const getAllocatedStudentsListByTeacherName = (req, res) => {
-    const teacherName = req.params.teacherName;
-    Teacher.findOne({ name: teacherName })
-        .then(function (teacher) {
-            Student.find({ faculty_mentor: teacher._id })
-                .then(function (students) {
-                    res.status(200).json({
-                        students
-                    });
-                })
-                .catch(function (err) {
-                    res.status(500).json({
-                        error: err
-                    });
-                });
+const getAllocatedStudentsListByTeacherName = async (req, res) => {
+
+    try {
+        const teacherName = req.params.teacherName
+
+        let students = await Student.find({ "faculty_mentor.name": teacherName }, { password: 0 })
+
+        res.status(200).json({
+            students
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
+
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+    // const teacherName = req.params.teacherName;
+    // Teacher.findOne({ name: teacherName })
+    //     .then(function (teacher) {
+    //         Student.find({ faculty_mentor: teacher._id })
+    //             .then(function (students) {
+    //                 res.status(200).json({
+    //                     students
+    //                 });
+    //             })
+    //             .catch(function (err) {
+    //                 res.status(500).json({
+    //                     error: err
+    //                 });
+    //             });
+    //     })
+    //     .catch(function (err) {
+    //         res.status(500).json({
+    //             error: err
+    //         });
+    //     });
 }
 
 module.exports = {
@@ -876,13 +814,11 @@ module.exports = {
     deleteTeacher,
     getTeacherDetails,
     getTeachersList,
-    allocateSingleStudent,
-    deallocateSingleStudent,
-    allocateStudent,
-    unallocateStudent,
+    allocateStudents,
+    unallocateStudents,
     getAllocatedStudentsList,
     getUnallocatedStudentsList,
-    getAllocatedTeachersList,
-    getUnallocatedTeachersList,
+    // getAllocatedTeachersList,
+    // getUnallocatedTeachersList,
     getAllocatedStudentsListByTeacherName
 }
