@@ -1,6 +1,7 @@
 // import env variables
 require('dotenv').config()
 
+//import packages
 const bcrypt = require('bcrypt');
 const importExcel = require('convert-excel-to-json');
 const fs = require('fs');
@@ -11,14 +12,9 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin.model');
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
-const File = require('../models/File.model');
 
 const saltRounds = 12
 
-// test route
-const test = (req, res) => {
-    res.send('working...');
-}
 
 // Admin Functions
 
@@ -150,6 +146,7 @@ const getAllAdmins = (req, res) => {
     });
 }
 
+// update admin info
 const updateAdminInfo = async (req, res) => {
     
     try {
@@ -773,30 +770,9 @@ const getAllocatedStudentsListByTeacherName = async (req, res) => {
             message: "Something went wrong"
         })
     }
-    // const teacherName = req.params.teacherName;
-    // Teacher.findOne({ name: teacherName })
-    //     .then(function (teacher) {
-    //         Student.find({ faculty_mentor: teacher._id })
-    //             .then(function (students) {
-    //                 res.status(200).json({
-    //                     students
-    //                 });
-    //             })
-    //             .catch(function (err) {
-    //                 res.status(500).json({
-    //                     error: err
-    //                 });
-    //             });
-    //     })
-    //     .catch(function (err) {
-    //         res.status(500).json({
-    //             error: err
-    //         });
-    //     });
 }
 
 module.exports = {
-    test,
     registerAdmin,
     loginAdmin,
     getAdminById,
