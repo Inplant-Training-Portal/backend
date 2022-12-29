@@ -1,3 +1,6 @@
+// import .env variables
+require('dotenv').config();
+
 // import packages
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -6,257 +9,210 @@ const excelJS = require('exceljs');
 var { google } = require('googleapis');
 const keys = require('../inplant-training-portal-369403-dec6828816c4.json')
 
-// import the student model
+// import models
 const Student = require('../models/Student.model');
 const Teacher = require('../models/Teacher.model');
 const Marks = require('../models/Marks.model');
+const File = require('../models/File.model')
 
-// import .env variables
-require('dotenv').config();
+// saltRounds to encrypt password
+const saltRounds = 12
 
-const secret = "secretkey"
 
 // login teacher
-const loginTeacher = (req, res) => {
-    const { username, password } = req.body;
-    Teacher.findOne({ username }, function (err, teacher) {
-        if (err) {
-            res.status(500).json({
-                error: err
-            });
+const loginTeacher = async (req, res) => {
+    
+    try {
+        const { username, password } = req.body;
+        let teacher = await Teacher.findOne({ username: username })
+        if(!teacher) {
+            res.status(404).json({
+                message: "Oops, No Teacher Found!"
+            })
         }
-        if (teacher) {
-            // compare password
-            bcrypt.compare(password, teacher.password, function (err, result) {
-                if (err) {
-                    res.status(401).json({
-                        message: 'Login failed! Please try again.'
-                    });
+        else {
+            // compare passport
+            bcrypt.compare(password, teacher.password, function(err, result) {
+                if(err) {
+                    res.status(500).json({
+                        message: "Something went wrong"
+                    })
+                }
+                if(result) {
+                    const payload = { id: teacher._id, whoami: "teacher"}
+
+                    jwt.sign(
+                        payload,
+                        process.env.SECRETORKEY,
+                        { expiresIn: '1h' },
+                        (err, token) => {
+                            res.status(202).json({
+                                message: "Login Successful!",
+                                token: "Bearer " + token,
+                                user: {
+                                    id: teacher._id,
+                                    name: teacher.name,
+                                    username: teacher.username,
+                                    email: teacher.email,
+                                    mobile_no: teacher.mobile_no
+                                }
+                            })
+                        }
+                    )
                 }
                 else {
-                    if (result) {
-                        // generate token
-                        let token = jwt.sign({ username: teacher._id }, secret, { expiresIn: '1h' });
-                        res.status(200).json({
-                            message: 'Login successful!',
-                            token,
-                            user: teacher
-                        });
-                    } 
-                    else {
-                        res.status(401).json({
-                            message: 'Password does not match!'
-                        });
-                    }
+                    res.status(401).json({
+                        message: "Incorrect Credentials"
+                    })
                 }
-            });
-        } else {
-            res.status(401).json({
-                message: 'Oops, Teacher not found!'
-            });
+            })
         }
-    });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
+        })
+    }
 }
 
 // update teacher info
-const updateTeacherInfo = (req, res) => {
-    const id = req.params.id;
+const updateTeacherInfo = async (req, res) => {
+    
+    try {
+        const id = req.user.id;
+        let newInfo = {};
 
-    let newInfo = {};
+        if(req.body.email) {
+            newInfo.email = req.body.email;
+        }
 
-    if(req.body.email){
-        newInfo.email = req.body.email;
+        if(req.body.mobile_no) {
+            newInfo.mobile_no = req.body.mobile_no
+        }
 
-    }
+        await Teacher.findByIdAndUpdate(id, newInfo, { new: true })
 
-    if(req.body.mobile_no) {
-        newInfo.mobile_no = req.body.mobile_no;
-    }
-
-    Teacher.findByIdAndUpdate(id, newInfo, { new: true })
-        .then(function (result) {
-            res.status(200).json({
-                message: 'Info updated successfully!',
-                result
-            });
+        res.status(200).json({
+            message: "Info update successfully!"
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            error: err,
+            message: "Something went wrong"
+        })
+    }
 }
 
 // change password
-const changeTeacherPassword = (req, res) => {
-    const id = req.params.id;
-    const { oldPassword, newPassword, confirmPassword } = req.body;
-
-    // check if old password is correct
-    if(oldPassword) {
-        Teacher.findById(id)
-            .then(function (teacher) {
-                if (teacher) {
-                    // compare password
-                    bcrypt.compare(oldPassword, teacher.password, function (err, result) {
-                        if (err) {
-                            res.status(401).json({
-                                message: 'Login failed! Please try again.'
-                            });
+const changeTeacherPassword = async (req, res) => {
+    
+    try {
+        const id = req.user.id;
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+        let teacher = await Teacher.findById(id)
+        bcrypt.compare(oldPassword, teacher.password, function (err, result) {
+            if(err) {
+                res.status(401).json({
+                    message: "Something went wrong"
+                })
+            }
+            if(result) {
+                if(newPassword === confirmPassword) {
+                    // encrypt password
+                    bcrypt.hash(newPassword, saltRounds, function(err, hashedPassword) {
+                        if(err) {
+                            res.status(500).json({
+                                message: "Something went wrong"
+                            })
                         }
-                        if (result) {
-                            // check if new password and confirm password match
-                            if(newPassword === confirmPassword) {
-                                // encrypt password
-                                bcrypt.hash(newPassword, 10, function (err, hash) {
-                                    if (err) {
-                                        res.json({
-                                            error: err
-                                        })
-                                    }
-                                    Teacher.findByIdAndUpdate(id, { password: hash }, { new: true })
-                                        .then(function (result) {
-                                            res.status(200).json({
-                                                message: 'Password updated successfully!',
-                                                result
-                                            });
-                                        })
-                                        .catch(function (err) {
-                                            res.status(500).json({
-                                                error: err
-                                            });
-                                        });
-                                });
-                            } else {
-                                res.status(401).json({
-                                    message: 'New password and Confirm password do not match!'
-                                });
-                            }
+                        if(result) {
+                            teacher.password = hashedPassword
+                            teacher.save()
+                            res.status(202).json({
+                                message: "Password changed successfully"
+                            })
                         }
-                        else {
-                            res.status(401).json({
-                                message: 'Old password does not match!'
-                            });
-                        }
-                    });
-                } else {
-                    res.status(401).json({
-                        message: 'Oops, Teacher not found!'
-                    });
+                    })
+                }
+                else {
+                    res.status(400).json({
+                        message: "New password and Confirm password do not match!"
+                    })
                 }
             }
-            )
-            .catch(function (err) {
-                res.status(500).json({
-                    error: err
-                });
+            else {
+                res.status(400).json({
+                    message: "Old password doesn't match"
+                })
             }
-            );
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
     }
 }
 
-// get student list
-const getStudentsList = (req, res) => {
-    Student.find({}, function (err, students) {
-        if (err) {
-            res.status(500).json({
-                message: 'Oops, something went wrong!',
-                error: err
-            });
-        }
+// get student's details
+const getStudentDetails = async (req, res) => {
+
+    try {
+        const id = req.params.id;
+        let student = await Student.findById(id, { password: 0 })
+
+        res.status(200).json({
+            student
+        });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
+
+// get students list
+const getStudentsList = async (req, res) => {
+
+    try {
+        let students = await Student.find({}, { password: 0 })
+
         res.status(200).json({
             students
-        });
-    }
-    );
-}
-
-const getAllocatedStudentsListByTeacherName = (req, res) => {
-    const teacherName = req.params.teacherName;
-    Teacher.findOne({ name: teacherName })
-        .then(function (teacher) {
-            Student.find({ faculty_mentor: teacher._id })
-                .then(function (students) {
-                    res.status(200).json({
-                        students
-                    });
-                })
-                .catch(function (err) {
-                    res.status(500).json({
-                        error: err
-                    });
-                });
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        });
-}
-
-// student info
-const getStudentProfile = async (req, res) => {
-    try {
-        if (req.headers.authorization) {
-            const token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, 'randomString');
-            const student = await Student.findById(decoded.student.id);
-            if (!student) {
-                return res.status(404).json({ message: 'Student not found' });
-            }
-            res.status(200).json(student);
-        } else {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-    } catch (e) {
-        res.send({ message: 'Error in Fetching student' });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
     }
 }
 
-const getTeacherProfile = async (req, res) => {
+const getAllocatedStudentsList = async (req, res) => {
+
     try {
-        // request student is _id of student
-        const teacher = await Teacher.findById(req.teacher.id);
-        res.json(teacher);
-    } catch (e) {
-        res.send({ message: 'Error in Fetching teacher' });
+        const id = req.user.id
+
+        let teacher = await Teacher.findById(id)
+        let students = await Student.find({ "faculty_mentor.name": teacher.name}, { password: 0 })
+
+        res.status(200).json({
+            students
+        })
     }
-}
-
-// view file
-const viewFile = async (req, res) => {
-    try {
-        const file = await File.findById(req.params.id);
-        res.json(file);
-    } catch (e) {
-        res.send({ message: 'Error in Fetching file' });
-    }
-}
-
-// download file
-const downloadFile = async (req, res) => {
-    try {
-        const file = await File.findById(req.params.id);
-        res.download(file.path);
-    } catch (e) {
-        res.send({ message: 'Error in Fetching file' });
-    }
-}
-
-const updateTeacherProfile = async (req, res) => {
-    try {
-        const teacher = await Teacher.findById(req.params.id);
-        if (teacher) {
-            teacher.email = req.body.email 
-            teacher.mobile_no = req.body.mobile_no
-
-            const updatedTeacher = await teacher.save();
-            res.json(updatedTeacher);
-        } else {
-            res.status(404).json({ message: 'Teacher not found' });
-        }
-    } catch (e) {
-        res.send({ message: 'Error in Updating teacher' });
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
     }
 }
 
@@ -606,22 +562,99 @@ const sendBulkMail = (req, res) => {
     }
 }
 
+// map file
+const mapFile = async (req, res) => {
+
+    try {
+        const { id } = req.body
+
+        let documents = await File.find({ student_id: id })
+
+        res.status(200).json({
+            documents
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
+
+// delete file
+const deleteFile = async (req, res) => {
+
+    try {
+        const { fileId } = req.body
+        console.log(fileId);
+
+        const client = new google.auth.JWT(
+            keys.client_email,
+            null,
+            keys.private_key,
+            ['https://www.googleapis.com/auth/drive']
+        );
+        
+        client.authorize(async function(err, tokens) {
+            if(err) {
+                console.log(err);
+                return;
+            }
+            else {
+                console.log('Connected to Drive API');
+                await gdrun(client);
+            }
+        });
+        
+        async function gdrun(cl) {
+            const gdapi = google.drive({ version: 'v3', auth: cl });
+
+            const deleteFile = async (req, res) => {
+                await gdapi.files.delete({
+                    fileId: fileId,
+                })
+            }
+
+            await deleteFile()
+            console.log("Deleted file from Drive");
+        }
+
+        const file = await File.findOne({ "files.fileId": fileId })
+        
+        file.files.forEach(element => {
+            if(element.fileId == fileId) {
+                console.log(element);
+                file.files.remove(element)
+                file.save()
+            }
+        });
+
+        res.status(200).json({
+            message: "File Deleted Successfully"
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
 
 
 module.exports={
     loginTeacher,
     updateTeacherInfo,
     changeTeacherPassword,
+    getStudentDetails,
     getStudentsList,
-    getAllocatedStudentsListByTeacherName,
-    getStudentProfile,
-    getTeacherProfile,
-    viewFile,
-    downloadFile,
-    updateTeacherProfile,
+    getAllocatedStudentsList,
     sendMail,
     sendDetails,
     uploadIndustryMarks,
     uploadFacultyMarks,
-    sendBulkMail
+    sendBulkMail,
+    mapFile,
+    deleteFile
 }

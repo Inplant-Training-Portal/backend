@@ -19,8 +19,8 @@ const saltRounds = 12
 const loginStudent = async (req, res) => {
     
     try {
-        const { enrollment_no, password } = req.body;
-        let student = await Student.findOne({ enrollment_no: enrollment_no })
+        const { username, password } = req.body;
+        let student = await Student.findOne({ enrollment_no: username })
         if(!student) {
             res.status(404).json({
                 message: "Oops, No Student Found!"
@@ -30,7 +30,7 @@ const loginStudent = async (req, res) => {
             // compare password
             bcrypt.compare(password, student.password, function(err, result) {
                 if(result) {
-                    const payload = { id: student._id, enrollment_no: student.enrollment_no, name: student.name, email: student.email, mobile_no: enrollment_no.mobile_no }
+                    const payload = { id: student._id, whoami: "student"}
 
                     // sign jwt to get token
                     jwt.sign(
@@ -41,7 +41,19 @@ const loginStudent = async (req, res) => {
                             res.status(202).json({
                                 message: "Login Successful!",
                                 token: "Bearer " + token,
-                                user: payload
+                                user: {
+                                    id: student._id,
+                                    name: student.name,
+                                    enrollment_no: student.enrollment_no,
+                                    email: student.email,
+                                    mobile_no: student.mobile_no,
+                                    faculty_mentor_name: student.faculty_mentor.name,
+                                    faculty_mentor_email: student.faculty_mentor.email,
+                                    faculty_mentor_mobile_no: student.faculty_mentor.mobile_no,
+                                    organization_name: student.organization_mentor.name,
+                                    organization_mentor_name: student.organization_mentor.mentor_name,
+                                    organization_mentor_email: student.organization_mentor.mentor_email,
+                                }
                             })
                         }
                     )
@@ -139,17 +151,6 @@ const changeStudentPassword = async (req, res) => {
     }
 }
 
-// // get student profile
-// const getTeacherProfile = async (req, res) => {
-//     try {
-//         // request student is _id of student
-//         const teacher = await Teacher.findById(req.teacher.id);
-//         res.json(teacher);
-//     } catch (e) {
-//         res.send({ message: 'Error in Fetching teacher' });
-//     }
-// }
-
 // upload file
 const uploadFile = async (req, res) => {
 
@@ -198,14 +199,29 @@ const uploadFile = async (req, res) => {
 
             let student = await Student.findById(id)
 
-            const fileData = await File.create({
-                student_id: student._id,
-                name: originalname,
-                url : `https://drive.google.com/file/d/${file.data.id}`
-            });
+            const files = await File.findOne({ student_id: student._id })
 
-            student.documents.push(fileData._id)
-            student.save()
+            const fileData = {
+                name: originalname,
+                fileId: file.data.id,
+                url : `https://drive.google.com/file/d/${file.data.id}`
+            }
+
+            if(!files) {
+                const newFile = await File.create({
+                    student_id: student._id
+                })
+
+                newFile.files.push(fileData)
+                newFile.save()
+
+                student.documents.push(newFile._id)
+                student.save()
+            }
+            else {
+                files.files.push(fileData)
+                files.save()
+            }
             
             fs.unlink(path, (err) => {
                 if(err) {
@@ -227,9 +243,6 @@ const uploadFile = async (req, res) => {
             message: "Something went wrong"
         })
     }
-
-
-
 }
 
 // map file
@@ -238,10 +251,69 @@ const mapFile = async (req, res) => {
     try {
         const id = req.user.id
 
-        let documents = await File.find({ student_id: id })
+        let documents = await File.findOne({ student_id: id })
 
         res.status(200).json({
             documents
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
+
+// delete file
+const deleteFile = async (req, res) => {
+
+    try {
+        const { fileId } = req.body
+        console.log(fileId);
+
+        const client = new google.auth.JWT(
+            keys.client_email,
+            null,
+            keys.private_key,
+            ['https://www.googleapis.com/auth/drive']
+        );
+        
+        client.authorize(async function(err, tokens) {
+            if(err) {
+                console.log(err);
+                return;
+            }
+            else {
+                console.log('Connected to Drive API');
+                await gdrun(client);
+            }
+        });
+        
+        async function gdrun(cl) {
+            const gdapi = google.drive({ version: 'v3', auth: cl });
+
+            const deleteFile = async (req, res) => {
+                await gdapi.files.delete({
+                    fileId: fileId,
+                })
+            }
+
+            await deleteFile()
+            console.log("Deleted file from Drive");
+        }
+
+        const file = await File.findOne({ "files.fileId": fileId })
+        
+        file.files.forEach(element => {
+            if(element.fileId == fileId) {
+                file.files.remove(element)
+                file.save()
+            }
+        });
+
+        res.status(200).json({
+            message: "File Deleted Successfully"
         })
     }
     catch(err) {
@@ -259,5 +331,6 @@ module.exports={
     changeStudentPassword,
     // getTeacherProfile,
     uploadFile,
-    mapFile
+    mapFile,
+    deleteFile
 }

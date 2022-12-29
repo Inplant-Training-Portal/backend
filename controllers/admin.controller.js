@@ -18,6 +18,24 @@ const saltRounds = 12
 
 // Admin Functions
 
+const test = async (req, res) => {
+
+    try {
+        const { id } = req.user.id
+        console.log(id);
+
+        res.status(200).json({
+            message: "Authorized"
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
+
 // register admin
 const registerAdmin = async (req, res) => {
     
@@ -80,7 +98,7 @@ const loginAdmin = async (req, res) => {
                     })
                 }
                 if(result) {
-                    const payload = { id: admin._id, username: admin.username, name: admin.name, email: admin.email, mobile_no: admin.mobile_no }
+                    const payload = { id: admin._id, whoami: "admin"}
 
                     jwt.sign(
                         payload,
@@ -90,7 +108,13 @@ const loginAdmin = async (req, res) => {
                             res.status(202).json({
                                 message: "Login Successful!",
                                 token: "Bearer " + token,
-                                user: payload
+                                user: {
+                                    id: admin._id,
+                                    name: admin.name,
+                                    username: admin.username,
+                                    email: admin.email,
+                                    mobile_no: admin.mobile_no
+                                }
                             })
                         }
                     )
@@ -214,13 +238,17 @@ const changeAdminPassword = async (req, res) => {
                     })
                 }
             }
+            else {
+                res.status(400).json({
+                    message: "Old password doesn't match"
+                })
+            }
         })
 
     }
     catch(err) {
         console.log(err);
         res.status(500).json({
-            error: err,
             message: "Something went wrong"
         })
     }
@@ -233,7 +261,7 @@ const changeAdminPassword = async (req, res) => {
 const addStudent = async (req, res) => {
     
     try {
-        const { name, enrollment_no, password } = req.body;
+        const { name, enrollment_no, password, mobile_no, email } = req.body;
         let student = await Student.findOne({ enrollment_no: enrollment_no })
         if(student) {
             res.status(400).json({
@@ -245,7 +273,9 @@ const addStudent = async (req, res) => {
                 const newStudent = await Student.create({
                     name: name,
                     enrollment_no: enrollment_no,
-                    password: hashedPassword
+                    password: hashedPassword,
+                    email: email,
+                    mobile_no: mobile_no
                 })
 
                 res.status(201).json({
@@ -268,6 +298,7 @@ const addStudentUsingExcel = async (req, res) => {
 
     try {
         const file = req.file;
+        console.log(req.file);
         const path = file.path;
 
         let data = importExcel({
@@ -298,7 +329,9 @@ const addStudentUsingExcel = async (req, res) => {
         });
 
         data.Sheet1.forEach(async function(studentData) {
+            console.log(studentData);
             let student = await Student.findOne({ enrollment_no: studentData.enrollment_no })
+            console.log(student);
             if(!student) {
                 bcrypt.hash(studentData.password, saltRounds, async function(err, hashedPassword) {
                     const newStudent = await Student.create({
@@ -307,9 +340,9 @@ const addStudentUsingExcel = async (req, res) => {
                         password: hashedPassword,
                         email: studentData.email,
                         mobile_no: studentData.mobile_no,
-                        organization_name: studentData.organization_name,
-                        organization_mentor_name: studentData.organization_mentor_name,
-                        organization_mentor_email: studentData.organization_mentor_email
+                        "organization_mentor.name": studentData.organization_name,
+                        "organization_mentor.mentor_name": studentData.organization_mentor_name,
+                        "organization_mentor.mentor_email": studentData.organization_mentor_email
                     });
                 });
             }
@@ -593,6 +626,7 @@ const getTeachersList = async (req, res) => {
 
 // allocate students
 const allocateStudents = async (req, res) => {
+    // console.log(req.body, req.params)
 
     try {
         const teacherName = req.params.teacherName
@@ -691,66 +725,6 @@ const getUnallocatedStudentsList = async (req, res) => {
     }
 }
 
-// get allocated teachers list
-// const getAllocatedTeachersList = async (req, res) => {
-
-//     try {
-//         let teachers = await Teacher.find({ students: { $ne: null } }, { password: 0 })
-
-//         res.status(200).json({
-//             teachers
-//         })
-//     }
-//     catch(err) {
-//         console.log(err);
-//         res.status(500).json({
-//             message: "Something went wrong"
-//         })
-//     }
-//     // Teacher.find({ students: { $ne: null } })
-//     //     .then(function (teachers) {
-//     //         res.status(200).json({
-//     //             teachers
-//     //         });
-//     //     })
-//     //     .catch(function (err) {
-//     //         res.status(500).json({
-//     //             error: err
-//     //         });
-//     //     });
-// }
-
-
-// get unallocated teachers list
-// const getUnallocatedTeachersList = async (req, res) => {
-
-//     try {
-//         let teachers = await Teacher.find({ students: null }, { password: 0 })
-
-//         res.status(200).json({
-//             teachers
-//         })
-//     }
-//     catch(err) {
-//         console.log(err);
-//         res.status(500).json({
-//             message: "Something went wrong"
-//         })
-//     }
-//     // Teacher.find({ students: null })
-//     //     .then(function (teachers) {
-//     //         res.status(200).json({
-//     //             teachers
-//     //         });
-//     //     })
-//     //     .catch(function (err) {
-//     //         res.status(500).json({
-//     //             error: err
-//     //         });
-//     //     });
-// }
-
-
 // get allocated students list by teacher name
 const getAllocatedStudentsListByTeacherName = async (req, res) => {
 
@@ -773,6 +747,7 @@ const getAllocatedStudentsListByTeacherName = async (req, res) => {
 }
 
 module.exports = {
+    test,
     registerAdmin,
     loginAdmin,
     getAdminById,
@@ -794,7 +769,5 @@ module.exports = {
     unallocateStudents,
     getAllocatedStudentsList,
     getUnallocatedStudentsList,
-    // getAllocatedTeachersList,
-    // getUnallocatedTeachersList,
     getAllocatedStudentsListByTeacherName
 }
