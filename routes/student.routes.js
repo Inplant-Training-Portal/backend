@@ -3,10 +3,10 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
-const passport = require('passport')
 
 // import auth file
-require('../auth/student.auth')(passport)
+const passport = require('passport')
+require('../auth/auth')(passport)
 
 // import student controller
 const studentController = require('../controllers/student.controller');
@@ -29,6 +29,8 @@ router.post("/file/upload", passport.authenticate('jwt', { session: false }), up
 // map document
 router.get("/file/map", passport.authenticate('jwt', { session: false }), studentController.mapFile);
 
+// delete document
+router.post("/file/delete", studentController.deleteFile);
 
 // export router
 module.exports = router;

@@ -1,6 +1,10 @@
-// import express
+// import packages
 const express = require('express');
 const router = express.Router();
+
+// import auth file
+const passport = require('passport')
+require('../auth/auth')(passport)
 
 // import teacher controller
 const teacherController = require('../controllers/teacher.controller');
@@ -9,31 +13,19 @@ const teacherController = require('../controllers/teacher.controller');
 router.post('/login', teacherController.loginTeacher);
 
 // update teacher profile
-router.post('/update/info/:id', teacherController.updateTeacherInfo);
+router.post('/update/info', passport.authenticate('jwt', { session: false }), teacherController.updateTeacherInfo);
 
 // change password
-router.post('/update/password/:id', teacherController.changeTeacherPassword);
+router.post('/update/password', teacherController.changeTeacherPassword);
 
-// get teacher profile
-// router.get('/profile/:id', teacherController.getTeacherProfile);
+// get student details
+router.get('/student-info/:id', teacherController.getStudentDetails);
 
 // get all students
 router.get('/students/list', teacherController.getStudentsList);
 
 // get allocated students list
-router.get('/allocated-students/:teacherName', teacherController.getAllocatedStudentsListByTeacherName);
-
-// get student profile
-router.get('/student-profile/:id', teacherController.getStudentProfile);
-
-// update teacher profile
-router.put('/profile/:id', teacherController.updateTeacherProfile);
-
-// view files
-router.get('/file/view/:id', teacherController.viewFile);
-
-// download files
-router.get('/file/download/:id', teacherController.downloadFile);
+router.get('/allocated-students', passport.authenticate('jwt', { session: false }), teacherController.getAllocatedStudentsList);
 
 // send email
 router.post('/send-email', teacherController.sendMail);
@@ -49,6 +41,12 @@ router.post('/upload-faculty-marks/:studentName', teacherController.uploadFacult
 
 // send bulk email
 router.post('/send-bulk-email', teacherController.sendBulkMail);
+
+// map document
+router.get('/file/map', teacherController.mapFile);
+
+// delete document
+router.post('/file/delete', teacherController.deleteFile);
 
 
 // export router

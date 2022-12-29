@@ -1,15 +1,18 @@
-// admin router
+// import packages
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const upload = multer({ dest: 'excel/' });
-const passport = require('passport')
 
 // import auth file
-require('../auth/admin.auth')(passport)
+const passport = require('passport')
+require('../auth/auth')(passport)
 
 // import admin controller
-const adminController = require('../controllers/admin.controller.js');
+const adminController = require('../controllers/admin.controller');
+
+// test route
+router.get('/', passport.authenticate('jwt', { session: false }), adminController.test);
 
 // register admin
 router.post('/register', adminController.registerAdmin);
@@ -30,55 +33,49 @@ router.post('/update/password', passport.authenticate('jwt', { session: false })
 // router.get('/list', adminController.getAllAdmins);
 
 // add student
-router.post('/add-student', passport.authenticate('jwt', { session: false }), adminController.addStudent);
+router.post('/add-student', adminController.addStudent);
 
 // add student using excel file
-router.post('/add-student/excel', passport.authenticate('jwt', { session: false }), upload.single('file'), adminController.addStudentUsingExcel);
+router.post('/add-student/excel', upload.single('file'), adminController.addStudentUsingExcel);
 
 // delete student
-router.post('/delete-student', passport.authenticate('jwt', { session: false }), adminController.deleteStudent);
+router.post('/delete-student', adminController.deleteStudent);
 
 // get student details
 router.get('/student-info/:id', passport.authenticate('jwt', { session: false }), adminController.getStudentDetails);
 
 // get students list
-router.get('/students/list', passport.authenticate('jwt', { session: false }), adminController.getStudentsList);
+router.get('/students/list', adminController.getStudentsList);
 
 // add teacher
 router.post('/add-teacher', passport.authenticate('jwt', { session: false }), adminController.addTeacher);
 
 // add teacher using excel file
-router.post('/add-teacher/excel', passport.authenticate('jwt', { session: false }), upload.single('file'), adminController.addTeacherUsingExcel);
+router.post('/add-teacher/excel', upload.single('file'), adminController.addTeacherUsingExcel);
 
 // delete teacher
-router.post('/delete-teacher', passport.authenticate('jwt', { session: false }), adminController.deleteTeacher);
+router.post('/delete-teacher', adminController.deleteTeacher);
 
 // get teacher details
 router.get('/teacher-info/:id', passport.authenticate('jwt', { session: false }), adminController.getTeacherDetails);
 
 // get teachers list
-router.get('/teachers/list', passport.authenticate('jwt', { session: false }), adminController.getTeachersList);
+router.get('/teachers/list', adminController.getTeachersList);
 
 // allocate student
-router.post('/allocate-student/:teacherName', passport.authenticate('jwt', { session: false }), adminController.allocateStudents);
+router.post('/allocate-students/:teacherName', adminController.allocateStudents);
 
 //unallocate student
-router.post('/unallocate-student/:teacherName', passport.authenticate('jwt', { session: false }), adminController.unallocateStudents);
+router.post('/unallocate-student/:teacherName', adminController.unallocateStudents);
 
 // get allocated students list
-router.get('/allocated-students', passport.authenticate('jwt', { session: false }), adminController.getAllocatedStudentsList);
+router.get('/allocated-students', adminController.getAllocatedStudentsList);
 
 // get unallocated students list
-router.get('/unallocated-students', passport.authenticate('jwt', { session: false }), adminController.getUnallocatedStudentsList);
-
-// get allocated teachers list
-// router.get('/allocated-teachers', passport.authenticate('jwt', { session: false }), adminController.getAllocatedTeachersList);
-
-// get unallocated teachers list
-// router.get('/unallocated-teachers', passport.authenticate('jwt', { session: false }), adminController.getUnallocatedTeachersList);
+router.get('/unallocated-students', adminController.getUnallocatedStudentsList);
 
 // get allocated students list by teacher name
-router.get('/allocated-students/:teacherName', passport.authenticate('jwt', { session: false }), adminController.getAllocatedStudentsListByTeacherName);
+router.get('/allocated-students/:teacherName', adminController.getAllocatedStudentsListByTeacherName);
 
 
 // export admin router
