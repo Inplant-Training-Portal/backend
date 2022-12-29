@@ -4,25 +4,34 @@ const Schema = mongoose.Schema;
 // teacher schema
 const MarksSchema = new Schema({
     // DETAILS
-    student: {
-        type: String,
-        required: true
+    student_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student"
     },
-    discipline: {
-        type: String,
-    },
-    attitude: {
-        type: String,
-    },
-    maintenance: {
-        type: String,
-    },
-    report: {
-        type: String,
-    },
-    achievement: {
-        type: String,
-    }
+    marks: [
+        {
+            discipline: {
+                type: String,
+                required: true
+            },
+            attitude: {
+                type: String,
+                required: true
+            },
+            maintenance: {
+                type: String,
+                required: true
+            },
+            report: {
+                type: String,
+                required: true
+            },
+            achievement: {
+                type: String,
+                required: true
+            }
+        }
+    ]
 });
 
 // export teacher model
