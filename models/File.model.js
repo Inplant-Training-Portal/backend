@@ -5,14 +5,22 @@ const File = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Student"
     },
-    name: {
-        type: String,
-        required: true
-    },
-    url: {
-        type: String,
-        required: true
-    }
+    files: [
+        {
+            name: {
+                type: String,
+                required: true
+            },
+            fileId: {
+                type: String,
+                required: true
+            },
+            url: {
+                type: String,
+                required: true
+            }
+        }
+    ]
 })
 
 module.exports = mongoose.model("File", File)
