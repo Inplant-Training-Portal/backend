@@ -294,9 +294,7 @@ const mapFile = async (req, res) => {
 const deleteFile = async (req, res) => {
 
     try {
-        console.log(req.body);
         const { fileId } = req.body
-        console.log(fileId);
 
         const client = new google.auth.JWT(
             keys.client_email,
