@@ -11,6 +11,9 @@ require('../auth/auth')(passport)
 // import student controller
 const studentController = require('../controllers/student.controller');
 
+// auth route
+router.get('/', passport.authenticate('jwt', { session: false }), studentController.auth);
+
 // login student
 router.post('/login', studentController.loginStudent);
 
@@ -30,7 +33,7 @@ router.post("/file/upload", passport.authenticate('jwt', { session: false }), up
 router.get("/file/map", passport.authenticate('jwt', { session: false }), studentController.mapFile);
 
 // delete document
-router.post("/file/delete", studentController.deleteFile);
+router.post("/file/delete", passport.authenticate('jwt', { session: false }), studentController.deleteFile);
 
 // export router
 module.exports = router;

@@ -9,6 +9,12 @@ require('../auth/auth')(passport)
 // import teacher controller
 const teacherController = require('../controllers/teacher.controller');
 
+// auth route
+router.get('/', passport.authenticate('jwt', { session: false }), teacherController.auth);
+
+// login teacher
+router.post('/login', teacherController.loginTeacher);
+
 // login teacher
 router.post('/login', teacherController.loginTeacher);
 
@@ -16,19 +22,22 @@ router.post('/login', teacherController.loginTeacher);
 router.post('/update/info', passport.authenticate('jwt', { session: false }), teacherController.updateTeacherInfo);
 
 // change password
-router.post('/update/password', teacherController.changeTeacherPassword);
+router.post('/update/password', passport.authenticate('jwt', { session: false }), teacherController.changeTeacherPassword);
 
 // get student details
-router.get('/student-info/:id', teacherController.getStudentDetails);
+router.get('/student-info/:studentName', passport.authenticate('jwt', { session: false }), teacherController.getStudentDetails);
 
 // get all students
-router.get('/students/list', teacherController.getStudentsList);
+router.get('/students/list', passport.authenticate('jwt', { session: false }), teacherController.getStudentsList);
 
 // get allocated students list
 router.get('/allocated-students', passport.authenticate('jwt', { session: false }), teacherController.getAllocatedStudentsList);
 
 // send email
-router.post('/send-email', teacherController.sendMail);
+router.post('/send-email', passport.authenticate('jwt', { session: false }), teacherController.sendMail);
+
+// send bulk email
+router.post('/send-bulk-email', passport.authenticate('jwt', { session: false }), teacherController.sendBulkMail);
 
 // send details
 router.get('/send-details/:studentName', teacherController.sendDetails);
@@ -37,16 +46,13 @@ router.get('/send-details/:studentName', teacherController.sendDetails);
 router.post('/upload-industry-marks/:studentName', teacherController.uploadIndustryMarks);
 
 // get and upload faculty marks
-router.post('/upload-faculty-marks/:studentName', teacherController.uploadFacultyMarks);
-
-// send bulk email
-router.post('/send-bulk-email', teacherController.sendBulkMail);
+router.post('/upload-faculty-marks/:studentName', passport.authenticate('jwt', { session: false }), teacherController.uploadFacultyMarks);
 
 // map document
-router.get('/file/map', teacherController.mapFile);
+router.get('/file/map', passport.authenticate('jwt', { session: false }), teacherController.mapFile);
 
 // delete document
-router.post('/file/delete', teacherController.deleteFile);
+router.post('/file/delete', passport.authenticate('jwt', { session: false }), teacherController.deleteFile);
 
 
 // export router
