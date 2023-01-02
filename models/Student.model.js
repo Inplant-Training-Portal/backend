@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // student schema
-const StudentSchema = new Schema({
+const Student = new Schema({
     // STUDENT DETAILS
     name: {
         type: String,
@@ -44,10 +44,12 @@ const StudentSchema = new Schema({
     },
     // MARKS
     faculty_marks: {
-        type: Array
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "FacultyMarks"
     },
     industry_marks: {
-        type: Array
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "IndustryMarks"
     },
     // LAST UPDATED
     date: {
@@ -58,4 +60,4 @@ const StudentSchema = new Schema({
 });
 
 // export student model
-module.exports = mongoose.model('Student', StudentSchema);
+module.exports = mongoose.model('Student', Student);
