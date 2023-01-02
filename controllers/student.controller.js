@@ -15,6 +15,22 @@ const File = require('../models/File.model');
 const saltRounds = 12
 
 
+// auth 
+const auth = async (req, res) => {
+
+    try {
+        res.status(200).json({
+            message: "Authorized"
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
+
 // login student
 const loginStudent = async (req, res) => {
     
@@ -40,7 +56,7 @@ const loginStudent = async (req, res) => {
                         (err, token) => {
                             res.status(202).json({
                                 message: "Login Successful!",
-                                token: "Bearer " + token,
+                                token: token,
                                 user: {
                                     id: student._id,
                                     name: student.name,
@@ -92,8 +108,11 @@ const updateStudentInfo = async (req, res) => {
 
         await Student.findByIdAndUpdate(id, newInfo, { new: true })
 
+        const student = await Student.findById(id, { password: 0 })
+
         res.status(200).json({
-            message: "Info update successfully!"
+            message: "Info update successfully!",
+            user: student
         })
     }
     catch(err) {
@@ -252,10 +271,16 @@ const mapFile = async (req, res) => {
         const id = req.user.id
 
         let documents = await File.findOne({ student_id: id })
-
-        res.status(200).json({
-            documents
-        })
+        if(!documents) {
+            res.status(200).json({
+                success: true
+            })
+        }
+        else {
+            res.status(200).json({
+                documents
+            })
+        }
     }
     catch(err) {
         console.log(err);
@@ -269,6 +294,7 @@ const mapFile = async (req, res) => {
 const deleteFile = async (req, res) => {
 
     try {
+        console.log(req.body);
         const { fileId } = req.body
         console.log(fileId);
 
@@ -326,6 +352,7 @@ const deleteFile = async (req, res) => {
 
 
 module.exports={
+    auth,
     loginStudent,
     updateStudentInfo,
     changeStudentPassword,
