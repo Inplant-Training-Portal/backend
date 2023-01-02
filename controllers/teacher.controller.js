@@ -12,11 +12,29 @@ const keys = require('../inplant-training-portal-369403-dec6828816c4.json')
 // import models
 const Student = require('../models/Student.model');
 const Teacher = require('../models/Teacher.model');
-const Marks = require('../models/Marks.model');
+const IndustryMarks = require('../models/IndustryMarks.model');
+const FacultyMarks = require('../models/FacultyMarks.model');
 const File = require('../models/File.model')
 
 // saltRounds to encrypt password
 const saltRounds = 12
+
+
+// auth 
+const auth = async (req, res) => {
+
+    try {
+        res.status(200).json({
+            message: "Authorized"
+        })
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
 
 
 // login teacher
@@ -48,7 +66,7 @@ const loginTeacher = async (req, res) => {
                         (err, token) => {
                             res.status(202).json({
                                 message: "Login Successful!",
-                                token: "Bearer " + token,
+                                token: token,
                                 user: {
                                     id: teacher._id,
                                     name: teacher.name,
@@ -94,8 +112,11 @@ const updateTeacherInfo = async (req, res) => {
 
         await Teacher.findByIdAndUpdate(id, newInfo, { new: true })
 
+        const teacher = await Teacher.findById(id, { password: 0 })
+
         res.status(200).json({
-            message: "Info update successfully!"
+            message: "Info update successfully!",
+            user: teacher
         })
     }
     catch(err) {
@@ -217,121 +238,218 @@ const getAllocatedStudentsList = async (req, res) => {
 }
 
 // send mail
-const sendMail = (req, res) => {
+const sendMail = async (req, res) => {
 
-    const { name, faculty_mentor_name, organization_mentor_email } = req.body;
-    const query = `?name=${name}`
-    const link = `${req.headers.origin}/ask-assessment/${query}`
+    try {
+        const id = req.user.id
+        console.log(req.body);
+        const { studentName } = req.body
+        const query = `?name=${studentName}`
+        const link = `${req.headers.origin}/ask-assessment/${query}`
 
-    // setup transporter
-    const transporter = nodeMailer.createTransport({
-        service: 'gmail',
-        auth: {
-            // take from .env file
-            user: process.env.EMAIL,
-            pass: process.env.PASSWORD
-        },
-        port: 587,
-        host: 'smtp.gmail.com'
-    });
+        const teacher = await Teacher.findById(id, { password: 0 })
 
-    console.log("Transporter is ready to send mail");
+        const student = await Student.findOne({ name: studentName }, { password: 0 })
 
-    // setup email data
-    const mailOptions = {
-        from: process.env.EMAIL,
-        to: organization_mentor_email,
-        subject: "Ask for Marks Evaluation",
-        text: "Dear Sir/Madam, I am " + faculty_mentor_name + 
-        " from the Department of Computer Engineering, Government Polytechnic Mumbai. I would like to ask you to evaluate the marks of my student " + 
-        name + 
-        " . Google Form link for the same is attached below Thank you.\n\n" + 
-        link
-    };
 
-    console.log("Mail Drafted");
+        // setup transporter
+        const transporter = nodeMailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_ID,
+                pass: process.env.EMAIL_PASSWORD
+            },
+            port: 587,
+            host: 'smtp.gmail.com'
+        });
 
-    // send mail
-    transporter.sendMail(mailOptions, function (err, info) {
-        if (err) {
-            console.log(err);
-            res.status(500).json({
-                message: 'Oops, something went wrong!',
-                error: err
+        console.log("Transporter is ready to send mail");
+
+        // setup email data
+        const mailOptions = {
+            from: process.env.EMAIL,
+            to: student.organization_mentor.mentor_email,
+            subject: "Ask for Marks Evaluation",
+            text: "Dear Sir/Madam, I am " + teacher.name + 
+            " from the Department of Computer Engineering, Government Polytechnic Mumbai. I would like to ask you to evaluate the marks of my student " + 
+            student.name + 
+            " . Google Form link for the same is attached below Thank you.\n\n" + 
+            link
+        };
+
+        console.log("Mail Drafted");
+
+        // send mail
+        transporter.sendMail(mailOptions, function (err, info) {
+            if (err) {
+                console.log(err);
+                res.status(500).json({
+                    message: 'Oops, something went wrong!',
+                    error: err
+                });
+            } else {
+                console.log("Mail Sent " + info.response);
+                res.status(200).json({
+                    message: 'Mail sent successfully!'
+                });
+            }
+        });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
+}
+
+// send bulk email
+const sendBulkMail = async (req, res) => {
+
+    try {
+        console.log(req.body)
+        const id = req.user.id
+        const data = req.body
+
+        const teacher = await Teacher.findById(id, { password: 0 })
+
+        data.forEach(async element => {
+            const query = `?name=${element}`
+            const link = `${req.headers.origin}/ask-assessment/${query}`
+            const student = await Student.findOne({ name: element }, { password: 0 })
+
+            // setup transporter
+            const transporter = nodeMailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.EMAIL_ID,
+                    pass: process.env.EMAIL_PASSWORD
+                },
+                port: 587,
+                host: 'smtp.gmail.com'
             });
-        } else {
-            console.log("Mail Sent " + info.response);
-            res.status(200).json({
-                message: 'Mail sent successfully!'
+    
+            console.log("Transporter is ready to send mail");
+    
+            // setup email data
+            const mailOptions = {
+                from: process.env.EMAIL,
+                to: student.organization_mentor.mentor_email,
+                subject: "Ask for Marks Evaluation",
+                text: "Dear Sir/Madam, I am " + teacher.name + 
+                " from the Department of Computer Engineering, Government Polytechnic Mumbai. I would like to ask you to evaluate the marks of my student " + 
+                student.name + 
+                " . Google Form link for the same is attached below Thank you.\n\n" + 
+                link
+            };
+    
+            console.log("Mail Drafted");
+    
+            // send mail
+            transporter.sendMail(mailOptions, function (err, info) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log("Mail Sent " + info.response);
+                }
             });
-        }
-    });
+        });
+
+        res.status(200).json({
+            message: 'Mail sent successfully!'
+        });
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
+        })
+    }
 }
 
 // send details
-const sendDetails = (req, res) => {
-    const query = req.params.studentName;
-    const studentName = query.split('=')[1];
+const sendDetails = async (req, res) => {
 
-    Student
-        .findOne
-        ({
-            name: studentName
-        })
-        .then(function (student) {
+    try {
+        const studentName = req.params.studentName;
+
+        const student = await Student.findOne({ name: studentName }, { password: 0 })
+
+        if(student) {
             res.status(200).json({
                 student
-            });
+            })
+        }
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
         })
-        .catch(function (err) {
-            res.status(500).json({
-                error: err,
-                message: 'Oops, something went wrong!'
-            });
-        });
+    }
 }
 
 // get and upload industry marks
-const uploadIndustryMarks = (req, res) => {
-    const studentName = req.params.studentName;
-    const { discipline, attitude, maintenance, report, achievement } = req.body;
+const uploadIndustryMarks = async (req, res) => {
+    console.log(req.body);
+    
+    try {
+        const studentName = req.params.studentName
+        const { month, discipline, attitude, maintenance, report, achievement } = req.body;
 
-    Student.findOne({name: studentName})
-        .then(function (student) {
-            // create marks
-            const marks = new Marks({
-                student: student._id,
-                discipline,
-                attitude,
-                maintenance,
-                report,
-                achievement
-            });
-            marks.save()
+        const student = await Student.findOne({ name: studentName }, { password: 0 })
 
-            // push marks to student
-            student.industry_marks.push(marks._id);
-            student.save()
+        if(!student) {
+            res.status(404).json({
+                message: "Something went wrong"
+            })
+        }
+        else {
+            const marksData = {
+                month: month,
+                discipline: discipline,
+                attitude: attitude,
+                maintenance: maintenance,
+                report: report,
+                achievement: achievement
+            }
+            const marks = await IndustryMarks.findOne({ student_id: student._id })
+
+            if(!marks) {
+                const newMarks = await IndustryMarks.create({
+                    student_id: student._id
+                })
+
+                newMarks.marks.push(marksData)
+                newMarks.save()
+
+                student.industry_marks = newMarks._id
+                student.save()
+            }
+            else {
+                marks.marks.push(marksData)
+                marks.save()
+            }
 
             // save marks in excel file
             const fileName = "./excel/marks.xlsx";
-            const workbook = new excelJS.Workbook();
+            const wb = new excelJS.Workbook();
             
-            workbook.xlsx.readFile(fileName)
-            .then(() => {
-                const worksheet = workbook.getWorksheet(1);
-                const lastRow = worksheet.lastRow;
-                const getRowInsert = worksheet.getRow(++(lastRow.number));
-                getRowInsert.getCell(1).value = student.enrollment_no;
-                getRowInsert.getCell(2).value = studentName;
-                getRowInsert.getCell(3).value = discipline;
-                getRowInsert.getCell(4).value = attitude;
-                getRowInsert.getCell(5).value = maintenance;
-                getRowInsert.getCell(6).value = report;
-                getRowInsert.getCell(7).value = achievement;
-                getRowInsert.commit();
-                workbook.xlsx.writeFile(fileName);
-            });
+            const file = await wb.xlsx.readFile(fileName)
+            const ws = file.getWorksheet('Industry_Marks')
+
+            const lastRow = ws.lastRow;
+            const getRowInsert = ws.getRow(++(lastRow.number))
+            getRowInsert.getCell(1).value = month;
+            getRowInsert.getCell(2).value = student.enrollment_no;
+            getRowInsert.getCell(3).value = student.name;
+            getRowInsert.getCell(4).value = discipline;
+            getRowInsert.getCell(5).value = attitude;
+            getRowInsert.getCell(6).value = maintenance;
+            getRowInsert.getCell(7).value = report;
+            getRowInsert.getCell(8).value = achievement;
+            getRowInsert.commit();
+            wb.xlsx.writeFile(fileName)
 
             // create client
             const client = new google.auth.JWT(
@@ -364,12 +482,11 @@ const uploadIndustryMarks = (req, res) => {
             
                 // discard 1 empty item from each row
                 data = data.map(function(r) {
-                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7]];
+                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]];
                 });
             
                 // discard sheet 1 empty item
                 data.shift();
-                // console.log(data1);
                 
                 //update function
                 const update = {
@@ -379,63 +496,82 @@ const uploadIndustryMarks = (req, res) => {
                     resource: { values: data }
                 };
             
-                let res = await gsapi.spreadsheets.values.update(update);
-            }
+                let response = await gsapi.spreadsheets.values.update(update);
 
-            res.status(200).json({
-                message: 'Marks uploaded successfully!'
-            });
+                res.status(200).json({
+                    message: "Marks uploaded successfully"
+                })
+            }
+        }
+    }
+    catch(err) {
+        console.log(err);
+        res.status(500).json({
+            message: "Something went wrong"
         })
-        .catch(function (err) {
-            console.log(err);
-            res.status(500).json({
-                error: err,
-                message: 'Oops, something went wrong!'
-            });
-        });
+    }
 }
 
 // get and upload faculty marks
-const uploadFacultyMarks = (req, res) => {
-    const studentName = req.params.studentName;
-    const { discipline, attitude, maintenance, report, achievement } = req.body;
+const uploadFacultyMarks = async (req, res) => {
+    
+    try {
+        const studentName = req.params.studentName
+        const { month, discipline, attitude, maintenance, report, achievement } = req.body;
 
-    Student.findOne({name: studentName})
-        .then(function (student) {
-            // create marks
-            const marks = new Marks({
-                student: student._id,
-                discipline,
-                attitude,
-                maintenance,
-                report,
-                achievement
-            });
-            marks.save()
+        const student = await Student.findOne({ name: studentName }, { password: 0 })
 
-            // update student
-            student.faculty_marks.push(marks._id);
-            student.save()
+        if(!student) {
+            res.status(404).json({
+                message: "Something went wrong"
+            })
+        }
+        else {
+            const marksData = {
+                month: month,
+                discipline: discipline,
+                attitude: attitude,
+                maintenance: maintenance,
+                report: report,
+                achievement: achievement
+            }
+            const marks = await FacultyMarks.findOne({ student_id: student._id })
+
+            if(!marks) {
+                const newMarks = await FacultyMarks.create({
+                    student_id: student._id
+                })
+
+                newMarks.marks.push(marksData)
+                newMarks.save()
+
+                student.faculty_marks = newMarks._id
+                student.save()
+            }
+            else {
+                marks.marks.push(marksData)
+                marks.save()
+            }
 
             // save marks in excel file
             const fileName = "./excel/marks.xlsx";
-            const workbook = new excelJS.Workbook();
+            const wb = new excelJS.Workbook();
             
-            workbook.xlsx.readFile(fileName)
-            .then(() => {
-                const worksheet = workbook.getWorksheet(2);
-                const lastRow = worksheet.lastRow;
-                const getRowInsert = worksheet.getRow(++(lastRow.number));
-                getRowInsert.getCell(1).value = student.enrollment_no;
-                getRowInsert.getCell(2).value = studentName;
-                getRowInsert.getCell(3).value = discipline;
-                getRowInsert.getCell(4).value = attitude;
-                getRowInsert.getCell(5).value = maintenance;
-                getRowInsert.getCell(6).value = report;
-                getRowInsert.getCell(7).value = achievement;
-                getRowInsert.commit();
-                workbook.xlsx.writeFile(fileName);
-            });
+            const file = await wb.xlsx.readFile(fileName)
+            const ws = file.getWorksheet('Faculty_Marks')
+
+            const lastRow = ws.lastRow;
+            const getRowInsert = ws.getRow(++(lastRow.number))
+            getRowInsert.getCell(1).value = month;
+            getRowInsert.getCell(2).value = student.enrollment_no;
+            getRowInsert.getCell(3).value = student.name;
+            getRowInsert.getCell(4).value = discipline;
+            getRowInsert.getCell(5).value = attitude;
+            getRowInsert.getCell(6).value = maintenance;
+            getRowInsert.getCell(7).value = report;
+            getRowInsert.getCell(8).value = achievement;
+            getRowInsert.commit();
+            wb.xlsx.writeFile(fileName)
 
             // create client
             const client = new google.auth.JWT(
@@ -468,12 +604,11 @@ const uploadFacultyMarks = (req, res) => {
             
                 // discard 1 empty item from each row
                 data = data.map(function(r) {
-                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7]];
+                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]];
                 });
             
                 // discard sheet 1 empty item
                 data.shift();
-                // console.log(data1);
                 
                 //update function
                 const update = {
@@ -483,82 +618,19 @@ const uploadFacultyMarks = (req, res) => {
                     resource: { values: data }
                 };
             
-                let res = await gsapi.spreadsheets.values.update(update);
+                let response = await gsapi.spreadsheets.values.update(update);
+
+                res.status(200).json({
+                    message: "Marks uploaded successfully"
+                })
             }
-
-            res.status(200).json({
-                message: 'Marks uploaded successfully!'
-            });
-        })
-        .catch(function (err) {
-            console.log(err);
-            res.status(500).json({
-                error: err,
-                message: 'Oops, something went wrong!'
-            });
-        });
-}
-
-// send bulk email
-const sendBulkMail = (req, res) => {
-
-    ifError = false;
-
-    // loop number of students
-    for (let i = 0; i < req.body.length; i++) {
-        const name = req.body[i][0];
-        const faculty_mentor_name = req.body[i][1];
-        const organization_mentor_email = req.body[i][2];
-
-        const query = `?name=${name}`
-        const link = `${req.headers.origin}/ask-assessment/${query}`
-
-        // setup transporter
-        const transporter = nodeMailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL,
-                pass: process.env.PASSWORD
-            },
-            port: 587,
-            host: 'smtp.gmail.com',
-        });
-
-        console.log("Transporter is ready to send mail");
-
-        // setup email data
-        const mailOptions = {
-            from: process.env.EMAIL,
-            to: organization_mentor_email,
-            subject: "Ask for Marks Evaluation",
-            text: "Dear Sir/Madam, I am " + faculty_mentor_name + 
-            " from the Department of Computer Engineering, Government Polytechnic Mumbai. I would like to ask you to evaluate the marks of my student " + 
-            name + 
-            " . Google Form link for the same is attached below Thank you.\n\n" + 
-            link
-        };
-
-        console.log("Mail Drafted");
-
-        // send mail
-        transporter.sendMail(mailOptions, function (err, info) {
-            if (err) {
-                ifError = true;
-                console.log(err);
-            } else {
-                console.log("Mail Sent " + info.response);
-            }
-        });
+        }
     }
-    if (ifError) {
+    catch(err) {
+        console.log(err);
         res.status(500).json({
-            message: 'Oops, something went wrong!'
-        });
-    }
-    else {
-        res.status(200).json({
-            message: 'Mail sent successfully!'
-        });
+            message: "Something went wrong"
+        })
     }
 }
 
@@ -644,6 +716,7 @@ const deleteFile = async (req, res) => {
 
 
 module.exports={
+    auth,
     loginTeacher,
     updateTeacherInfo,
     changeTeacherPassword,
