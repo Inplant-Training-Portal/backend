@@ -19,9 +19,7 @@ module.exports = passport => {
 
         // check whether user is admin
         if(jwt_payload.whoami == "admin") {
-            const user = await Admin.findById(jwt_payload.id)
-            console.log(user);
-            
+            const user = await Admin.findById(jwt_payload.id)            
             if(user) {
                 return done(null, user)
             }
@@ -33,8 +31,6 @@ module.exports = passport => {
         // check whether user is teacher
         if(jwt_payload.whoami == "teacher") {
             const user = await Teacher.findById(jwt_payload.id)
-            console.log(user);
-            
             if(user) {
                 return done(null, user)
             }
@@ -45,9 +41,7 @@ module.exports = passport => {
 
         // check whether user is student
         if(jwt_payload.whoami == "student") {
-            const user = await Student.findById(jwt_payload.id)
-            console.log(user);
-            
+            const user = await Student.findById(jwt_payload.id)            
             if(user) {
                 return done(null, user)
             }
