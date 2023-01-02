@@ -184,12 +184,45 @@ const changeTeacherPassword = async (req, res) => {
 const getStudentDetails = async (req, res) => {
 
     try {
-        const id = req.params.id;
-        let student = await Student.findById(id, { password: 0 })
+        const studentName = req.params.studentName;
+        let student = await Student.findOne({ name: studentName }, { password: 0 })
+        let documents = await File.findOne({ student_id: student.id })
 
-        res.status(200).json({
-            student
-        });
+        if(!documents) {
+            res.status(200).json({
+                student: {
+                    id: student._id,
+                    name: student.name,
+                    enrollment_no: student.enrollment_no,
+                    email: student.email,
+                    mobile_no: student.mobile_no,
+                    faculty_mentor_name: student.faculty_mentor.name,
+                    faculty_mentor_email: student.faculty_mentor.email,
+                    faculty_mentor_mobile_no: student.faculty_mentor.mobile_no,
+                    organization_name: student.organization_mentor.name,
+                    organization_mentor_name: student.organization_mentor.mentor_name,
+                    organization_mentor_email: student.organization_mentor.mentor_email,
+                }
+            })
+        }
+        else {
+            res.status(200).json({
+                student: {
+                    id: student._id,
+                    name: student.name,
+                    enrollment_no: student.enrollment_no,
+                    email: student.email,
+                    mobile_no: student.mobile_no,
+                    faculty_mentor_name: student.faculty_mentor.name,
+                    faculty_mentor_email: student.faculty_mentor.email,
+                    faculty_mentor_mobile_no: student.faculty_mentor.mobile_no,
+                    organization_name: student.organization_mentor.name,
+                    organization_mentor_name: student.organization_mentor.mentor_name,
+                    organization_mentor_email: student.organization_mentor.mentor_email,
+                },
+                documents
+            })
+        }
     }
     catch(err) {
         console.log(err);
