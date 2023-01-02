@@ -12,18 +12,18 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin.model');
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
+const File = require('../models/File.model')
 
+// saltRounds for encrypting password
 const saltRounds = 12
 
 
 // Admin Functions
 
-const test = async (req, res) => {
+// auth 
+const auth = async (req, res) => {
 
     try {
-        const { id } = req.user.id
-        console.log(id);
-
         res.status(200).json({
             message: "Authorized"
         })
@@ -107,7 +107,7 @@ const loginAdmin = async (req, res) => {
                         (err, token) => {
                             res.status(202).json({
                                 message: "Login Successful!",
-                                token: "Bearer " + token,
+                                token: token,
                                 user: {
                                     id: admin._id,
                                     name: admin.name,
@@ -187,8 +187,11 @@ const updateAdminInfo = async (req, res) => {
 
         await Admin.findByIdAndUpdate(id, newInfo, { new: true })
 
+        const admin = await Admin.findById(id, { password: 0 })
+
         res.status(200).json({
-            message: "Info update successfully!"
+            message: "Info update successfully!",
+            user: admin
         })
     }
     catch(err) {
@@ -259,9 +262,10 @@ const changeAdminPassword = async (req, res) => {
 
 // add student
 const addStudent = async (req, res) => {
+    console.log(req.body);
     
     try {
-        const { name, enrollment_no, password, mobile_no, email } = req.body;
+        const { name, enrollment_no, password, mobile_no, email, organization_name, organization_mentor_name, organization_mentor_email } = req.body;
         let student = await Student.findOne({ enrollment_no: enrollment_no })
         if(student) {
             res.status(400).json({
@@ -275,7 +279,10 @@ const addStudent = async (req, res) => {
                     enrollment_no: enrollment_no,
                     password: hashedPassword,
                     email: email,
-                    mobile_no: mobile_no
+                    mobile_no: mobile_no,
+                    "organization_mentor.name": organization_name,
+                    "organization_mentor.mentor_name": organization_mentor_name,
+                    "organization_mentor.mentor_email": organization_mentor_email
                 })
 
                 res.status(201).json({
@@ -298,7 +305,6 @@ const addStudentUsingExcel = async (req, res) => {
 
     try {
         const file = req.file;
-        console.log(req.file);
         const path = file.path;
 
         let data = importExcel({
@@ -331,7 +337,6 @@ const addStudentUsingExcel = async (req, res) => {
         data.Sheet1.forEach(async function(studentData) {
             console.log(studentData);
             let student = await Student.findOne({ enrollment_no: studentData.enrollment_no })
-            console.log(student);
             if(!student) {
                 bcrypt.hash(studentData.password, saltRounds, async function(err, hashedPassword) {
                     const newStudent = await Student.create({
@@ -391,44 +396,49 @@ const deleteStudent = async (req, res) => {
     }
 }
 
-// get student's documents
-const getStudentDocuments = (req, res) => {
-    const id = req.params.id;
-
-    // get students id from params and return all documents
-    File.find({ owner: id })
-        .then(function (documents) {
-            res.status(200).json({
-                documents
-            });
-        }
-        )
-        .catch(function (err) {
-            res.status(500).json({
-                error: err
-            });
-        }
-        );
-}
-
 // get student's details
 const getStudentDetails = async (req, res) => {
 
     try {
-        const id = req.params.id;
-        let student = await Student.findById(id)
+        const studentName = req.params.studentName;
+        let student = await Student.findOne({ name: studentName }, { password: 0 })
+        let documents = await File.findOne({ student_id: student.id })
 
-        res.status(200).json({
-            student: {
-                name: student.name,
-                enrollment_no: student.enrollment_no,
-                email: student.email,
-                mobile_no: student.mobile_no,
-                organization_name: student.organization_name,
-                organization_mentor_name: student.organization_mentor_name,
-                organization_mentor_email: student.organization_mentor_email
-            }
-        });
+        if(!documents) {
+            res.status(200).json({
+                student: {
+                    id: student._id,
+                    name: student.name,
+                    enrollment_no: student.enrollment_no,
+                    email: student.email,
+                    mobile_no: student.mobile_no,
+                    faculty_mentor_name: student.faculty_mentor.name,
+                    faculty_mentor_email: student.faculty_mentor.email,
+                    faculty_mentor_mobile_no: student.faculty_mentor.mobile_no,
+                    organization_name: student.organization_mentor.name,
+                    organization_mentor_name: student.organization_mentor.mentor_name,
+                    organization_mentor_email: student.organization_mentor.mentor_email,
+                }
+            })
+        }
+        else {
+            res.status(200).json({
+                student: {
+                    id: student._id,
+                    name: student.name,
+                    enrollment_no: student.enrollment_no,
+                    email: student.email,
+                    mobile_no: student.mobile_no,
+                    faculty_mentor_name: student.faculty_mentor.name,
+                    faculty_mentor_email: student.faculty_mentor.email,
+                    faculty_mentor_mobile_no: student.faculty_mentor.mobile_no,
+                    organization_name: student.organization_mentor.name,
+                    organization_mentor_name: student.organization_mentor.mentor_name,
+                    organization_mentor_email: student.organization_mentor.mentor_email,
+                },
+                documents
+            })
+        }
     }
     catch(err) {
         console.log(err);
@@ -463,7 +473,7 @@ const getStudentsList = async (req, res) => {
 const addTeacher = async (req, res) => {
     
     try {
-        const { name, username, password } = req.body;
+        const { name, username, password, email, mobile_no } = req.body;
         let teacher = await Teacher.findOne({ username: username })
         if(teacher) {
             res.status(400).json({
@@ -475,7 +485,9 @@ const addTeacher = async (req, res) => {
                 const newTeacher = await Teacher.create({
                     name: name,
                     username: username,
-                    password: hashedPassword
+                    password: hashedPassword,
+                    email: email,
+                    mobile_no: mobile_no
                 })
 
                 res.status(201).json({
@@ -747,7 +759,7 @@ const getAllocatedStudentsListByTeacherName = async (req, res) => {
 }
 
 module.exports = {
-    test,
+    auth,
     registerAdmin,
     loginAdmin,
     getAdminById,
@@ -758,7 +770,6 @@ module.exports = {
     addStudentUsingExcel,
     deleteStudent,
     getStudentDetails,
-    getStudentDocuments,
     getStudentsList,
     addTeacher,
     addTeacherUsingExcel,
