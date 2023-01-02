@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // admin schema
-const AdminSchema = new Schema({
+const Admin = new Schema({
     // ADMIN DETAILS
     name: {
         type: String,
@@ -22,9 +22,9 @@ const AdminSchema = new Schema({
         type: String
     },
     mobile_no: {
-        type: String
+        type: Number
     }
 });
 
 // export admin model
-module.exports = mongoose.model('Admin', AdminSchema);
+module.exports = mongoose.model('Admin', Admin);

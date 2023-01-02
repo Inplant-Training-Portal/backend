@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // teacher schema
-const TeacherSchema = new Schema({
+const Teacher = new Schema({
     // TEACHER DETAILS
     name: {
         type: String,
@@ -34,5 +34,5 @@ const TeacherSchema = new Schema({
 });
 
 // export teacher model
-module.exports = mongoose.model('Teacher', TeacherSchema);
+module.exports = mongoose.model('Teacher', Teacher);
 
