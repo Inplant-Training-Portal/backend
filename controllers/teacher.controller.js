@@ -5,7 +5,6 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodeMailer = require('nodemailer');
-const excelJS = require('exceljs');
 var { google } = require('googleapis');
 const keys = require('../inplant-training-portal-369403-dec6828816c4.json')
 
@@ -424,7 +423,6 @@ const sendDetails = async (req, res) => {
 
 // get and upload industry marks
 const uploadIndustryMarks = async (req, res) => {
-    console.log(req.body);
     
     try {
         const studentName = req.params.studentName
@@ -464,26 +462,6 @@ const uploadIndustryMarks = async (req, res) => {
                 marks.save()
             }
 
-            // save marks in excel file
-            const fileName = "./excel/marks.xlsx";
-            const wb = new excelJS.Workbook();
-            
-            const file = await wb.xlsx.readFile(fileName)
-            const ws = file.getWorksheet('Industry_Marks')
-
-            const lastRow = ws.lastRow;
-            const getRowInsert = ws.getRow(++(lastRow.number))
-            getRowInsert.getCell(1).value = month;
-            getRowInsert.getCell(2).value = student.enrollment_no;
-            getRowInsert.getCell(3).value = student.name;
-            getRowInsert.getCell(4).value = discipline;
-            getRowInsert.getCell(5).value = attitude;
-            getRowInsert.getCell(6).value = maintenance;
-            getRowInsert.getCell(7).value = report;
-            getRowInsert.getCell(8).value = achievement;
-            getRowInsert.commit();
-            wb.xlsx.writeFile(fileName)
-
             // create client
             const client = new google.auth.JWT(
                 keys.client_email,
@@ -505,31 +483,18 @@ const uploadIndustryMarks = async (req, res) => {
 
             async function gsrun(cl) {
                 const gsapi = google.sheets({ version: 'v4', auth: cl });
-            
-                const wb = new excelJS.Workbook();
-                let excelFile = await wb.xlsx.readFile('./excel/marks.xlsx')
-                
-                // get data from Sheet1
-                let sheet = excelFile.getWorksheet('Industry_Marks');
-                let data = sheet.getSheetValues();
-            
-                // discard 1 empty item from each row
-                data = data.map(function(r) {
-                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]];
-                });
-            
-                // discard sheet 1 empty item
-                data.shift();
-                
-                //update function
-                const update = {
+
+                await gsapi.spreadsheets.values.append({
                     spreadsheetId: '1DbOUPg4Glor3oZszDejcEc_gPmb9UZ72Kdpig6ykaLc',
-                    range: 'Industry_Marks!A1',
+                    range: 'Industry_Marks!A:H',
                     valueInputOption: 'USER_ENTERED',
-                    resource: { values: data }
-                };
-            
-                let response = await gsapi.spreadsheets.values.update(update);
+                    resource: {
+                        values: [
+                            [month, student.enrollment_no, student.name, discipline, attitude, maintenance, report, achievement]
+                        ]
+                    }
+
+                })
 
                 res.status(200).json({
                     message: "Marks uploaded successfully"
@@ -586,26 +551,6 @@ const uploadFacultyMarks = async (req, res) => {
                 marks.save()
             }
 
-            // save marks in excel file
-            const fileName = "./excel/marks.xlsx";
-            const wb = new excelJS.Workbook();
-            
-            const file = await wb.xlsx.readFile(fileName)
-            const ws = file.getWorksheet('Faculty_Marks')
-
-            const lastRow = ws.lastRow;
-            const getRowInsert = ws.getRow(++(lastRow.number))
-            getRowInsert.getCell(1).value = month;
-            getRowInsert.getCell(2).value = student.enrollment_no;
-            getRowInsert.getCell(3).value = student.name;
-            getRowInsert.getCell(4).value = discipline;
-            getRowInsert.getCell(5).value = attitude;
-            getRowInsert.getCell(6).value = maintenance;
-            getRowInsert.getCell(7).value = report;
-            getRowInsert.getCell(8).value = achievement;
-            getRowInsert.commit();
-            wb.xlsx.writeFile(fileName)
-
             // create client
             const client = new google.auth.JWT(
                 keys.client_email,
@@ -628,30 +573,17 @@ const uploadFacultyMarks = async (req, res) => {
             async function gsrun(cl) {
                 const gsapi = google.sheets({ version: 'v4', auth: cl });
             
-                const wb = new excelJS.Workbook();
-                let excelFile = await wb.xlsx.readFile('./excel/marks.xlsx')
-                
-                // get data from Sheet1
-                let sheet = excelFile.getWorksheet('Faculty_Marks');
-                let data = sheet.getSheetValues();
-            
-                // discard 1 empty item from each row
-                data = data.map(function(r) {
-                    return [r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]];
-                });
-            
-                // discard sheet 1 empty item
-                data.shift();
-                
-                //update function
-                const update = {
+                await gsapi.spreadsheets.values.append({
                     spreadsheetId: '1DbOUPg4Glor3oZszDejcEc_gPmb9UZ72Kdpig6ykaLc',
-                    range: 'Faculty_Marks!A1',
+                    range: 'Faculty_Marks!A:H',
                     valueInputOption: 'USER_ENTERED',
-                    resource: { values: data }
-                };
-            
-                let response = await gsapi.spreadsheets.values.update(update);
+                    resource: {
+                        values: [
+                            [month, student.enrollment_no, student.name, discipline, attitude, maintenance, report, achievement]
+                        ]
+                    }
+
+                })
 
                 res.status(200).json({
                     message: "Marks uploaded successfully"
