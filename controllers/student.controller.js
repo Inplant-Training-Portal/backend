@@ -8,7 +8,6 @@ const jwt = require('jsonwebtoken')
 
 // import models
 const Student = require('../models/Student.model');
-const Teacher = require('../models/Teacher.model');
 const File = require('../models/File.model');
 
 // saltRounds for encrypting password
@@ -354,7 +353,6 @@ module.exports={
     loginStudent,
     updateStudentInfo,
     changeStudentPassword,
-    // getTeacherProfile,
     uploadFile,
     mapFile,
     deleteFile
